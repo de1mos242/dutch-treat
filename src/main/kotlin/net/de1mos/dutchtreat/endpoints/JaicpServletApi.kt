@@ -31,7 +31,7 @@ class JaicpServletApi {
                             channels = listOf(ChatWidgetChannel)
                     )
             ),
-            "/jaicf/*"
+            "/*"
     ).apply {
         setLoadOnStartup(1)
     }
