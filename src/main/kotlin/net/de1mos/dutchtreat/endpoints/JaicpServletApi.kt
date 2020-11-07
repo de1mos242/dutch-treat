@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 val bot = object : Scenario() {
     init {
         fallback {
-            reactions.say("I don't know what you meat of ${request.input}")
+            reactions.say("I don't know what you mean of ${request.input}")
         }
     }
 }

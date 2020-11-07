@@ -48,6 +48,9 @@ dependencies {
 	}
 	testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
 	testImplementation("org.testcontainers:junit-jupiter")
+
+	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
+	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
 //	testImplementation("org.testcontainers:mongodb")
 
 	implementation("ch.qos.logback:logback-classic:$logback")
