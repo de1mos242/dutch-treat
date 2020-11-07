@@ -42,4 +42,14 @@ class DutchTreatScenarioTest() {
         helper.query("Start event $eventName") responds "Great, you created an event '$eventName'"
         helper.query("get current event") responds "Current event is: $eventName"
     }
+
+    @Test
+    fun `add participant`() {
+        helper.query("Start event test")
+        helper.query("Get participants") responds "There is no participants yet, add someone"
+        helper.query("Add participant Denis") responds "Great, you added Denis to your event"
+        helper.query("Get participants") responds "Participants: Denis"
+        helper.query("Add participant Nick") responds "Great, you added Nick to your event"
+        helper.query("Get participants") responds "Participants: Denis, Nick"
+    }
 }

@@ -1,7 +1,9 @@
 package net.de1mos.dutchtreat.jaicf
 
 import com.justai.jaicf.activator.regex.regex
+import com.justai.jaicf.context.ActionContext
 import com.justai.jaicf.model.scenario.Scenario
+import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.services.EventService
 import net.de1mos.dutchtreat.services.UserPreferencesService
 import org.springframework.stereotype.Service
@@ -34,29 +36,47 @@ class DutchTreatScenario(
                     }
 
                     action {
-                        val eventName = activator.regex?.group("val")!!.trim()
+                        val eventName = getValFromRegex()
                         val e = eventService.createEvent(eventName)
                         userPreferencesService.updateUserCurrentEvent(context.clientId, e)
                         reactions.say("Great, you created an event '${e.name}'")
                     }
                 }
 
+
                 state("get current event") {
                     globalActivators {
                         regex("get current event")
                     }
                     action {
-                        val e = userPreferencesService.getUserCurrentEvent(context.clientId)
-                        if (e != null) {
-                            reactions.say("Current event is: ${e.name}")
-                        } else {
-                            reactions.say("There is no current event, but you can create a new one")
-                        }
+                        val e = getUserEvent()?: return@action
+                        reactions.say("Current event is: ${e.name}")
                     }
                 }
 
                 state("add participant") {
+                    globalActivators {
+                        regex("add participant (?<val>.*)")
+                    }
+                    action {
+                        val e = getUserEvent()?: return@action
+                        val name = getValFromRegex()
+                        eventService.addParticipant(e, name)
+                        reactions.say("Great, you added $name to your event")
+                    }
+                }
 
+                state("get participants") {
+                    globalActivators { regex("Get participants") }
+                    action {
+                        val e = getUserEvent()?: return@action
+                        val participants = eventService.getParticipants(e)
+                        if (participants.isEmpty()) {
+                            reactions.say("There is no participants yet, add someone")
+                        } else {
+                            reactions.say("Participants: ${participants.joinToString(", ")}")
+                        }
+                    }
                 }
 
                 fallback {
@@ -66,4 +86,13 @@ class DutchTreatScenario(
         }
     }
 
+    private fun ActionContext.getValFromRegex() = activator.regex?.group("val")!!.trim()
+    private fun ActionContext.getUserEvent(): Event? {
+        val e = userPreferencesService.getUserCurrentEvent(context.clientId)
+        if (e == null) {
+            reactions.say("There is no current event, but you can create a new one")
+            return null
+        }
+        return e
+    }
 }
