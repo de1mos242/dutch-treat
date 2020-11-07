@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.github.jengelman.gradle.plugins.shadow.transformers.*
 
 plugins {
 	id("org.springframework.boot") version "2.3.5.RELEASE"
@@ -86,4 +87,17 @@ tasks.create("stage") {
 
 tasks.withType<com.justai.jaicf.plugins.jaicp.build.JaicpBuild> {
 	mainClassName.set(application.mainClassName)
+}
+
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+	isZip64 = true
+	// Required for Spring
+	mergeServiceFiles()
+	append("META-INF/spring.handlers")
+	append("META-INF/spring.schemas")
+	append("META-INF/spring.tooling")
+	transform(PropertiesFileTransformer().apply {
+		paths = listOf("META-INF/spring.factories")
+		mergeStrategy = "append"
+	})
 }
