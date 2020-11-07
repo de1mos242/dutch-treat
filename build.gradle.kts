@@ -61,6 +61,7 @@ dependencies {
 	implementation("com.justai.jaicf:core:$jaicf")
 	implementation("com.justai.jaicf:jaicp:$jaicf")
 	implementation("com.justai.jaicf:caila:$jaicf")
+	implementation("com.justai.jaicf:telegram:$jaicf")
 }
 
 dependencyManagement {

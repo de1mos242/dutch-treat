@@ -24,6 +24,14 @@ class DutchTreatScenarioTest() {
     fun `catch all test`() {
         val query = "i don't know"
         helper.withClientId("user0")
-        helper.query(query) responds "I don't know what you mean of $query"
+        helper.query(query) responds "I don't know what you mean with $query"
+    }
+
+    @Test
+    fun `create event`() {
+        val eventName = "party"
+        helper.query("get current event") responds "There is no current event, but you can create a new one"
+        helper.query("Start event $eventName") responds "Great, you created an event '$eventName'"
+        helper.query("get current event") responds "Current event is: $eventName"
     }
 }
