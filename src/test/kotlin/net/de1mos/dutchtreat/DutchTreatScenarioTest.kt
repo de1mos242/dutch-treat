@@ -3,7 +3,7 @@ package net.de1mos.dutchtreat
 import com.justai.jaicf.reactions.text
 import com.justai.jaicf.test.ScenarioTest
 import net.de1mos.dutchtreat.jaicf.DutchTreatScenario
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -30,7 +30,7 @@ class DutchTreatScenarioTest() {
 
     @Test
     fun `handle start`() {
-         Assert.assertTrue(helper.event("/start").reactions.text?.response?.text?.startsWith("Hello") ?: false)
+        Assertions.assertTrue(helper.event("/start").reactions.text?.response?.text?.startsWith("Hello") ?: false)
     }
 
     @Test

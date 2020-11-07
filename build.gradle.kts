@@ -41,20 +41,14 @@ extra["testcontainersVersion"] = "1.14.3"
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 	implementation("org.springframework.boot:spring-boot-starter-web")
-//	implementation("org.springframework.data:spring-data-mongodb:3.1.0")
-//	implementation("org.mongodb:mongodb-driver-sync:4.1.1")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-//	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
-	testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
-	testImplementation("org.testcontainers:junit-jupiter")
 
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
-//	testImplementation("org.testcontainers:mongodb")
 
 	implementation("ch.qos.logback:logback-classic:$logback")
 
@@ -62,12 +56,6 @@ dependencies {
 	implementation("com.justai.jaicf:jaicp:$jaicf")
 	implementation("com.justai.jaicf:caila:$jaicf")
 	implementation("com.justai.jaicf:telegram:$jaicf")
-}
-
-dependencyManagement {
-	imports {
-		mavenBom("org.testcontainers:testcontainers-bom:${property("testcontainersVersion")}")
-	}
 }
 
 tasks.withType<Test> {
