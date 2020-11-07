@@ -10,6 +10,8 @@ import net.de1mos.dutchtreat.repositories.Purchase
 import net.de1mos.dutchtreat.repositories.Transfer
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -19,7 +21,7 @@ class EventService(val eventRepository: EventRepository) {
     data class TransferDto(val senderName: String, val receiverName: String, val amount: BigDecimal)
 
     fun createEvent(eventName: String): Event {
-        val event = Event(UUID.randomUUID().toString(), eventName)
+        val event = Event(UUID.randomUUID().toString(), eventName, LocalDateTime.now(ZoneOffset.UTC))
         eventRepository.save(event)
         return event
     }

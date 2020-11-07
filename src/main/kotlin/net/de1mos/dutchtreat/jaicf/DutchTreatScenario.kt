@@ -3,6 +3,7 @@ package net.de1mos.dutchtreat.jaicf
 import com.justai.jaicf.activator.regex.regex
 import com.justai.jaicf.context.ActionContext
 import com.justai.jaicf.model.scenario.Scenario
+import net.de1mos.dutchtreat.EventNotFoundException
 import net.de1mos.dutchtreat.NoPurchasesException
 import net.de1mos.dutchtreat.ParticipantNotFoundException
 import net.de1mos.dutchtreat.PurchaseNotFoundException
@@ -50,12 +51,36 @@ class DutchTreatScenario(
                     }
                 }
 
-
                 state("get current event") {
                     globalActivators { regex("get current event") }
                     action {
                         val e = getUserEvent() ?: return@action
                         reactions.say("Current event is: ${e.name}")
+                    }
+                }
+
+                state("show events") {
+                    globalActivators { regex("show events") }
+                    action {
+                        val events = userPreferencesService.getUserEvents(context.clientId)
+                        if (events.isEmpty()) {
+                            reactions.say("There are no events yet, try to start a new one")
+                        } else {
+                            reactions.say("Your events:\n" + events.mapIndexed { index, event -> "${index+1}. ${event.name}" }.joinToString("\n"))
+                        }
+                    }
+                }
+
+                state("switch to event") {
+                    globalActivators { regex("switch to event (?<event>.+)") }
+                    action {
+                        val eventName = getValFromRegex("event")
+                        try {
+                            userPreferencesService.switchEvent(context.clientId, eventName)
+                            reactions.say("Switched to event $eventName")
+                        } catch (e: EventNotFoundException) {
+                            reactions.say("There is no event ${e.eventName}, but you could start it")
+                        }
                     }
                 }
 
@@ -133,8 +158,12 @@ class DutchTreatScenario(
                         } else {
                             reactions.say("Purchases list:\n" + purchases.mapIndexed { index, purchase ->
                                 val consumers = if (purchase.consumers.isEmpty()) "" else {
-                                    " for " + purchase.consumers.reduceIndexed {
-                                        consumerIdx, acc, s -> acc + if (consumerIdx < purchase.consumers.size-1) {", "} else {" and "} + s
+                                    " for " + purchase.consumers.reduceIndexed { consumerIdx, acc, s ->
+                                        acc + if (consumerIdx < purchase.consumers.size - 1) {
+                                            ", "
+                                        } else {
+                                            " and "
+                                        } + s
                                     }
                                 }
                                 "${index + 1}. ${purchase.buyerName} bought ${purchase.description} for ${purchase.amount.toPrettyString()}" + consumers

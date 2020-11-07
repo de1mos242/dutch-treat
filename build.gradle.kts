@@ -1,5 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.transformers.PropertiesFileTransformer
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import com.github.jengelman.gradle.plugins.shadow.transformers.*
 
 plugins {
 	id("org.springframework.boot") version "2.3.5.RELEASE"
@@ -39,10 +39,10 @@ extra["testcontainersVersion"] = "1.14.3"
 
 
 dependencies {
-//	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("org.springframework.data:spring-data-mongodb:3.1.0")
-	implementation("org.mongodb:mongodb-driver-sync:4.1.1")
+//	implementation("org.springframework.data:spring-data-mongodb:3.1.0")
+//	implementation("org.mongodb:mongodb-driver-sync:4.1.1")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 //	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

@@ -25,7 +25,6 @@ class DutchTreatScenarioTest() {
     @Test
     fun `catch all test`() {
         val query = "i don't know"
-        helper.withClientId("user0")
         helper.query(query) responds "I don't know what you mean with $query"
     }
 
@@ -155,6 +154,28 @@ class DutchTreatScenarioTest() {
             Nick should give 46,65
             Linda should give 76,68
             Vanessa owes nobody and nobody owes him or her
+        """.trimIndent()
+    }
+
+    @Test
+    fun `create several events and switch between them`() {
+        helper.query("show events") responds "There are no events yet, try to start a new one"
+        helper.query("start event test")
+        helper.query("start event test2")
+        helper.query("show events") responds """
+            Your events:
+            1. test
+            2. test2
+        """.trimIndent()
+        helper.query("get current event") responds "Current event is: test2"
+        helper.query("switch to event test") responds "Switched to event test"
+        helper.query("switch to event test4") responds "There is no event test4, but you could start it"
+        helper.query("start event test3")
+        helper.query("show events") responds """
+            Your events:
+            1. test
+            2. test2
+            3. test3
         """.trimIndent()
     }
 }

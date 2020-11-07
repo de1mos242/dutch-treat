@@ -6,7 +6,8 @@ import org.springframework.data.mongodb.repository.MongoRepository
 data class UserPreferences(
         @Id
         val userId: String,
-        val lastEventId: String
+        val lastEventId: String,
+        val participatedEventIds: List<String>
 )
 
 interface UserPreferencesRepository : MongoRepository<UserPreferences, String>
