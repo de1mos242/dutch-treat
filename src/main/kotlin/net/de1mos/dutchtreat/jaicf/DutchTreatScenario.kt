@@ -4,15 +4,18 @@ import com.justai.jaicf.activator.regex.regex
 import com.justai.jaicf.context.ActionContext
 import com.justai.jaicf.model.scenario.Scenario
 import net.de1mos.dutchtreat.repositories.Event
+import net.de1mos.dutchtreat.services.BalanceService
 import net.de1mos.dutchtreat.services.EventService
 import net.de1mos.dutchtreat.services.UserPreferencesService
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.text.DecimalFormat
 
 @Service
 class DutchTreatScenario(
         val eventService: EventService,
-        val userPreferencesService: UserPreferencesService
+        val userPreferencesService: UserPreferencesService,
+        val balanceService: BalanceService
 ) {
     final val bot: Scenario
 
@@ -35,10 +38,7 @@ class DutchTreatScenario(
                 }
 
                 state("create event") {
-                    globalActivators {
-                        regex("start event (?<val>.+)")
-                    }
-
+                    globalActivators { regex("start event (?<val>.+)") }
                     action {
                         val eventName = getValFromRegex()
                         val e = eventService.createEvent(eventName)
@@ -49,9 +49,7 @@ class DutchTreatScenario(
 
 
                 state("get current event") {
-                    globalActivators {
-                        regex("get current event")
-                    }
+                    globalActivators { regex("get current event") }
                     action {
                         val e = getUserEvent() ?: return@action
                         reactions.say("Current event is: ${e.name}")
@@ -59,9 +57,7 @@ class DutchTreatScenario(
                 }
 
                 state("add participant") {
-                    globalActivators {
-                        regex("add participant (?<val>.+)")
-                    }
+                    globalActivators { regex("add participant (?<val>.+)") }
                     action {
                         val e = getUserEvent() ?: return@action
                         val name = getValFromRegex()
@@ -99,7 +95,7 @@ class DutchTreatScenario(
 
                         val p = eventService.addPurchase(e, participantName, desciption, cost)
                         if (p != null) {
-                            reactions.say("Great, added $participantName purchase for ${p.amountString}")
+                            reactions.say("Great, added $participantName purchase for ${p.amount.toPrettyString()}")
                         } else {
                             reactions.say("There is no participant with name $participantName, add him or her before")
                         }
@@ -115,9 +111,25 @@ class DutchTreatScenario(
                             reactions.say("There are no purchases yet, add a new one")
                         } else {
                             reactions.say("Purchases list:\n" + purchases.mapIndexed { index, purchase ->
-                                "${index + 1}. ${purchase.participantName} bought ${purchase.description} for ${purchase.amountString}"
+                                "${index + 1}. ${purchase.participantName} bought ${purchase.description} for ${purchase.amount.toPrettyString()}"
                             }.joinToString("\n"))
                         }
+                    }
+                }
+
+                state("get balance") {
+                    globalActivators { regex("Get balance") }
+                    action {
+                        val e = getUserEvent() ?: return@action
+                        val balance = balanceService.calculateBalance(e)
+                        reactions.say("Current balance\n" + balance.map {
+                            when (it.balance.compareTo(BigDecimal.ZERO)) {
+                                -1 -> "${it.participantName} should give ${it.balance.abs().toPrettyString()}"
+                                0 -> "${it.participantName} owes nobody and nobody owes him or her"
+                                1 -> "${it.participantName} should get ${it.balance.toPrettyString()}"
+                                else -> throw IllegalStateException(it.balance.toPrettyString())
+                            }
+                        }.joinToString("\n"))
                     }
                 }
 
@@ -136,5 +148,9 @@ class DutchTreatScenario(
             return null
         }
         return e
+    }
+
+    private fun BigDecimal.toPrettyString(): String {
+        return DecimalFormat("0.00").format(this)
     }
 }

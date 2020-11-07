@@ -6,7 +6,6 @@ import net.de1mos.dutchtreat.repositories.Participant
 import net.de1mos.dutchtreat.repositories.Purchase
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.text.DecimalFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -58,8 +57,5 @@ class EventService(val eventRepository: EventRepository) {
         } ?: emptyList()
     }
 
-    data class PurchaseDto(val participantName: String, val amount: BigDecimal, val description: String) {
-        val amountString: String
-            get() = DecimalFormat("0.00").format(amount)
-    }
+    data class PurchaseDto(val participantName: String, val amount: BigDecimal, val description: String)
 }

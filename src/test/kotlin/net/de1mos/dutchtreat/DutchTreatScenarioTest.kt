@@ -67,4 +67,26 @@ class DutchTreatScenarioTest() {
             2. Nick bought beer for 230,03
         """.trimIndent()
     }
+
+    @Test
+    fun `show balance`() {
+        helper.query("Start event test")
+        helper.query("Add participant Denis")
+        helper.query("Add participant Nick")
+        helper.query("Add participant Linda")
+        helper.query("get balance") responds """
+            Current balance
+            Denis owes nobody and nobody owes him or her
+            Nick owes nobody and nobody owes him or her
+            Linda owes nobody and nobody owes him or her
+        """.trimIndent()
+        helper.query("Denis bought meat for 400")
+        helper.query("Nick bought beer for 230.04")
+        helper.query("get balance") responds """
+            Current balance
+            Denis should get 189,99
+            Nick should get 20,03
+            Linda should give 210,01
+        """.trimIndent()
+    }
 }
