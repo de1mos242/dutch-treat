@@ -5,28 +5,19 @@ import com.justai.jaicf.channel.jaicp.JaicpServlet
 import com.justai.jaicf.channel.jaicp.JaicpWebhookConnector
 import com.justai.jaicf.channel.jaicp.channels.ChatWidgetChannel
 import com.justai.jaicf.model.scenario.Scenario
+import net.de1mos.dutchtreat.jaicf.DutchTreatScenario
 import org.springframework.boot.web.servlet.ServletRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 
-val bot = object : Scenario() {
-    init {
-        fallback {
-            reactions.say("I don't know what you mean of ${request.input}")
-        }
-    }
-}
-
-val engine = BotEngine(bot.model, activators = emptyArray())
-
 @Component
-class JaicpServletApi {
+class JaicpServletApi(val scenario: DutchTreatScenario) {
 
     @Bean
     fun jaicpServlet() = ServletRegistrationBean(
             JaicpServlet(
                     JaicpWebhookConnector(
-                            botApi = engine,
+                            botApi = BotEngine(scenario.bot.model, activators = emptyArray()),
                             accessToken = System.getenv("JAICP_API_TOKEN") ?: "d38e8351-d1f3-4547-a2d8-b17237eb814a",
                             channels = listOf(ChatWidgetChannel)
                     )
