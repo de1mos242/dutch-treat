@@ -7,6 +7,7 @@ import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.services.EventService
 import net.de1mos.dutchtreat.services.UserPreferencesService
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 
 @Service
 class DutchTreatScenario(
@@ -35,7 +36,7 @@ class DutchTreatScenario(
 
                 state("create event") {
                     globalActivators {
-                        regex("start event (?<val>.*)")
+                        regex("start event (?<val>.+)")
                     }
 
                     action {
@@ -52,17 +53,17 @@ class DutchTreatScenario(
                         regex("get current event")
                     }
                     action {
-                        val e = getUserEvent()?: return@action
+                        val e = getUserEvent() ?: return@action
                         reactions.say("Current event is: ${e.name}")
                     }
                 }
 
                 state("add participant") {
                     globalActivators {
-                        regex("add participant (?<val>.*)")
+                        regex("add participant (?<val>.+)")
                     }
                     action {
-                        val e = getUserEvent()?: return@action
+                        val e = getUserEvent() ?: return@action
                         val name = getValFromRegex()
                         eventService.addParticipant(e, name)
                         reactions.say("Great, you added $name to your event")
@@ -72,12 +73,50 @@ class DutchTreatScenario(
                 state("get participants") {
                     globalActivators { regex("Get participants") }
                     action {
-                        val e = getUserEvent()?: return@action
+                        val e = getUserEvent() ?: return@action
                         val participants = eventService.getParticipants(e)
                         if (participants.isEmpty()) {
-                            reactions.say("There is no participants yet, add someone")
+                            reactions.say("There are no participants yet, add someone")
                         } else {
                             reactions.say("Participants: ${participants.joinToString(", ")}")
+                        }
+                    }
+                }
+
+                state("add purchase") {
+                    globalActivators { regex("(?<participant>.+) bought (?<desc>.+) for (?<cost>[\\d\\.]+).*") }
+                    action {
+                        val e = getUserEvent() ?: return@action
+                        val participantName = getValFromRegex("participant")
+                        val desciption = getValFromRegex("desc")
+                        val costStr = getValFromRegex("cost")
+                        val cost = try {
+                            BigDecimal(costStr)
+                        } catch (e: NumberFormatException) {
+                            reactions.say("Can't reacognize $costStr as amount of money")
+                            return@action
+                        }
+
+                        val p = eventService.addPurchase(e, participantName, desciption, cost)
+                        if (p != null) {
+                            reactions.say("Great, added $participantName purchase for ${p.amountString}")
+                        } else {
+                            reactions.say("There is no participant with name $participantName, add him or her before")
+                        }
+                    }
+                }
+
+                state("get purchases") {
+                    globalActivators { regex("Get purchases") }
+                    action {
+                        val e = getUserEvent() ?: return@action
+                        val purchases = eventService.getPurchases(e)
+                        if (purchases.isEmpty()) {
+                            reactions.say("There are no purchases yet, add a new one")
+                        } else {
+                            reactions.say("Purchases list:\n" + purchases.mapIndexed { index, purchase ->
+                                "${index + 1}. ${purchase.participantName} bought ${purchase.description} for ${purchase.amountString}"
+                            }.joinToString("\n"))
                         }
                     }
                 }
@@ -89,7 +128,7 @@ class DutchTreatScenario(
         }
     }
 
-    private fun ActionContext.getValFromRegex() = activator.regex?.group("val")!!.trim()
+    private fun ActionContext.getValFromRegex(group: String = "val") = activator.regex?.group(group)!!.trim()
     private fun ActionContext.getUserEvent(): Event? {
         val e = userPreferencesService.getUserCurrentEvent(context.clientId)
         if (e == null) {
