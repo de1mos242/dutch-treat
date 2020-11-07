@@ -14,11 +14,15 @@ class BalanceService {
         }
         val participantsCount = event.participants.size.toBigDecimal()
         return event.participants.map {
-            val purchases = event.purchases?.filter { purchase -> purchase.participantId == it.id }?.map { purchase -> purchase.amount }?.plus(BigDecimal.ZERO)?.reduce(BigDecimal::add)
+            val purchases = event.purchases?.filter { p -> p.buyerId == it.id }?.map { p -> p.amount }?.plus(BigDecimal.ZERO)?.reduce(BigDecimal::add)
                     ?: BigDecimal.ZERO
-            val consumes = event.purchases?.map { purchase -> purchase.amount.divide(participantsCount, 4, RoundingMode.HALF_DOWN) }?.plus(BigDecimal.ZERO)?.reduce(BigDecimal::add)
+            val consumes = event.purchases?.map { p -> p.amount.divide(participantsCount, 4, RoundingMode.HALF_DOWN) }?.plus(BigDecimal.ZERO)?.reduce(BigDecimal::add)
                     ?: BigDecimal.ZERO
-            val balance = purchases.minus(consumes)
+            val sends = event.transfers?.filter { t -> t.senderId == it.id }?.map { t -> t.amount }?.plus(BigDecimal.ZERO)?.reduce(BigDecimal::add)
+                    ?: BigDecimal.ZERO
+            val receives = event.transfers?.filter { t -> t.receiverId == it.id }?.map { t -> t.amount }?.plus(BigDecimal.ZERO)?.reduce(BigDecimal::add)
+                    ?: BigDecimal.ZERO
+            val balance = purchases.minus(consumes).plus(sends).minus(receives)
             BalanceRow(it.name, if (balance.abs().compareTo(BigDecimal(0.5)) < 1) BigDecimal.ZERO else balance)
         }
     }

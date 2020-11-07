@@ -82,11 +82,39 @@ class DutchTreatScenarioTest() {
         """.trimIndent()
         helper.query("Denis bought meat for 400")
         helper.query("Nick bought beer for 230.04")
+        helper.query("Linda gave Nick 15")
+        helper.query("Linda gave Denis 150")
         helper.query("get balance") responds """
             Current balance
-            Denis should get 189,99
-            Nick should get 20,03
-            Linda should give 210,01
+            Denis should get 39,99
+            Nick should get 5,03
+            Linda should give 45,01
+        """.trimIndent()
+        helper.query("Linda gave Nick 5")
+        helper.query("Linda gave Denis 40")
+        helper.query("get balance") responds """
+            Current balance
+            Denis owes nobody and nobody owes him or her
+            Nick owes nobody and nobody owes him or her
+            Linda owes nobody and nobody owes him or her
+        """.trimIndent()
+    }
+
+    @Test
+    fun `transfer money`() {
+        helper.query("start event test")
+        helper.query("Add participant Denis")
+        helper.query("Add participant Nick")
+        helper.query("Add participant Linda")
+        helper.query("Get transfers") responds "There are no transfers yet, add a new one"
+        helper.query("Nick gave Linda 50") responds "Great, sent 50,00 from Nick to Linda"
+        helper.query("Denis gave Nick 150.45") responds "Great, sent 150,45 from Denis to Nick"
+        helper.query("Sam gave Nick 150.45") responds "There is no participant with name Sam, add him or her before"
+        helper.query("Denis gave Sam 150.45") responds "There is no participant with name Sam, add him or her before"
+        helper.query("get transfers") responds """
+            Transfers list:
+            1. Nick gave Linda 50,00
+            2. Denis gave Nick 150,45
         """.trimIndent()
     }
 }

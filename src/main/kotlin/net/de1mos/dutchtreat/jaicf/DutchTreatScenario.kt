@@ -3,6 +3,7 @@ package net.de1mos.dutchtreat.jaicf
 import com.justai.jaicf.activator.regex.regex
 import com.justai.jaicf.context.ActionContext
 import com.justai.jaicf.model.scenario.Scenario
+import net.de1mos.dutchtreat.ParticipantNotFound
 import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.services.BalanceService
 import net.de1mos.dutchtreat.services.EventService
@@ -80,24 +81,18 @@ class DutchTreatScenario(
                 }
 
                 state("add purchase") {
-                    globalActivators { regex("(?<participant>.+) bought (?<desc>.+) for (?<cost>[\\d\\.]+).*") }
+                    globalActivators { regex("(?<buyer>.+) bought (?<desc>.+) for (?<cost>[\\d\\.]+).*") }
                     action {
                         val e = getUserEvent() ?: return@action
-                        val participantName = getValFromRegex("participant")
-                        val desciption = getValFromRegex("desc")
-                        val costStr = getValFromRegex("cost")
-                        val cost = try {
-                            BigDecimal(costStr)
-                        } catch (e: NumberFormatException) {
-                            reactions.say("Can't reacognize $costStr as amount of money")
-                            return@action
-                        }
+                        val participantName = getValFromRegex("buyer")
+                        val description = getValFromRegex("desc")
+                        val cost = toBigDecimal(getValFromRegex("cost")) ?: return@action
 
-                        val p = eventService.addPurchase(e, participantName, desciption, cost)
-                        if (p != null) {
+                        try {
+                            val p = eventService.addPurchase(e, participantName, description, cost)
                             reactions.say("Great, added $participantName purchase for ${p.amount.toPrettyString()}")
-                        } else {
-                            reactions.say("There is no participant with name $participantName, add him or her before")
+                        } catch (e: ParticipantNotFound) {
+                            reactions.say("There is no participant with name ${e.name}, add him or her before")
                         }
                     }
                 }
@@ -111,7 +106,39 @@ class DutchTreatScenario(
                             reactions.say("There are no purchases yet, add a new one")
                         } else {
                             reactions.say("Purchases list:\n" + purchases.mapIndexed { index, purchase ->
-                                "${index + 1}. ${purchase.participantName} bought ${purchase.description} for ${purchase.amount.toPrettyString()}"
+                                "${index + 1}. ${purchase.buyerName} bought ${purchase.description} for ${purchase.amount.toPrettyString()}"
+                            }.joinToString("\n"))
+                        }
+                    }
+                }
+
+                state("add transfer") {
+                    globalActivators { regex("(?<sender>.+) gave (?<receiver>.+) (?<cost>[\\d\\.]+).*") }
+                    action {
+                        val e = getUserEvent() ?: return@action
+                        val senderName = getValFromRegex("sender")
+                        val receiverName = getValFromRegex("receiver")
+                        val cost = toBigDecimal(getValFromRegex("cost")) ?: return@action
+
+                        try {
+                            val t = eventService.addTransfer(e, senderName, receiverName, cost)
+                            reactions.say("Great, sent ${t.amount.toPrettyString()} from ${t.senderName} to ${t.receiverName}")
+                        } catch (e: ParticipantNotFound) {
+                            reactions.say("There is no participant with name ${e.name}, add him or her before")
+                        }
+                    }
+                }
+
+                state("get transfers") {
+                    globalActivators { regex("Get transfers") }
+                    action {
+                        val e = getUserEvent() ?: return@action
+                        val transfers = eventService.getTransfers(e)
+                        if (transfers.isEmpty()) {
+                            reactions.say("There are no transfers yet, add a new one")
+                        } else {
+                            reactions.say("Transfers list:\n" + transfers.mapIndexed { index, purchase ->
+                                "${index + 1}. ${purchase.senderName} gave ${purchase.receiverName} ${purchase.amount.toPrettyString()}"
                             }.joinToString("\n"))
                         }
                     }
@@ -148,6 +175,15 @@ class DutchTreatScenario(
             return null
         }
         return e
+    }
+
+    private fun ActionContext.toBigDecimal(str: String): BigDecimal? {
+        return try {
+            BigDecimal(str)
+        } catch (e: NumberFormatException) {
+            reactions.say("Can't recognize $str as amount of money")
+            null
+        }
     }
 
     private fun BigDecimal.toPrettyString(): String {
