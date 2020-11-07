@@ -16,6 +16,18 @@ class DutchTreatScenario(
     init {
         bot = object : Scenario() {
             init {
+                state("start") {
+                    globalActivators { event("/start") }
+                    action {
+                        reactions.say("""
+                            Hello, this is a Dutch Treat bot!
+                            I'm here to help you with party events.
+                            You can start with creating event, just say "start event %event_name%.
+                            Next you can add some participants to this event, just say "add participant %name%. 
+                        """.trimIndent())
+                    }
+                }
+
                 state("create event") {
                     globalActivators {
                         regex("start event (?<val>.*)")

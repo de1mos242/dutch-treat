@@ -1,7 +1,10 @@
 package net.de1mos.dutchtreat
 
+import com.justai.jaicf.reactions.text
 import com.justai.jaicf.test.ScenarioTest
 import net.de1mos.dutchtreat.jaicf.DutchTreatScenario
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.Assert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,6 +28,11 @@ class DutchTreatScenarioTest() {
         val query = "i don't know"
         helper.withClientId("user0")
         helper.query(query) responds "I don't know what you mean with $query"
+    }
+
+    @Test
+    fun `handle start`() {
+         Assert.assertTrue(helper.event("/start").reactions.text?.response?.text?.startsWith("Hello") ?: false)
     }
 
     @Test
