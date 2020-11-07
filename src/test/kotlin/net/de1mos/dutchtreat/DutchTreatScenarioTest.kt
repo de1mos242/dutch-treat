@@ -117,4 +117,44 @@ class DutchTreatScenarioTest() {
             2. Denis gave Nick 150,45
         """.trimIndent()
     }
+
+    @Test
+    fun `add consumers`() {
+        helper.query("start event test")
+        helper.query("Add participant Denis")
+        helper.query("Add participant Nick")
+        helper.query("Add participant Linda")
+        helper.query("Add participant Vanessa")
+        helper.query("Add Denis as a consumer to the last purchase") responds "There are no purchases yet, add a new one"
+        helper.query("Denis bought meat for 400 rubles")
+        helper.query("Add Denis as a consumer to the last purchase") responds "Great, I've added Denis as a consumer for meat"
+        helper.query("Add Sam as a consumer to the last purchase") responds "There is no participant with name Sam, add him or her before"
+        helper.query("Nick bought beer for 230.03")
+        helper.query("Vanessa bought vine for 75")
+        helper.query("Add vanessa as a consumer to the last purchase") responds "Great, I've added vanessa as a consumer for vine"
+        helper.query("Get purchases") responds """
+            Purchases list:
+            1. Denis bought meat for 400,00 for Denis
+            2. Nick bought beer for 230,03
+            3. Vanessa bought vine for 75,00 for Vanessa
+        """.trimIndent()
+        helper.query("Add Nick as a consumer to purchase 1") responds "Great, I've added Nick as a consumer for meat"
+        helper.query("Add Nick as a consumer to purchase 4") responds "Purchase with position 4 not found"
+        helper.query("Add Denis as a consumer to purchase 2") responds "Great, I've added Denis as a consumer for beer"
+        helper.query("Add Linda as a consumer to purchase 2") responds "Great, I've added Linda as a consumer for beer"
+        helper.query("Add Nick as a consumer to purchase 2") responds "Great, I've added Nick as a consumer for beer"
+        helper.query("Get purchases") responds """
+            Purchases list:
+            1. Denis bought meat for 400,00 for Denis and Nick
+            2. Nick bought beer for 230,03 for Denis, Linda and Nick
+            3. Vanessa bought vine for 75,00 for Vanessa
+        """.trimIndent()
+        helper.query("get balance") responds """
+            Current balance
+            Denis should get 123,32
+            Nick should give 46,65
+            Linda should give 76,68
+            Vanessa owes nobody and nobody owes him or her
+        """.trimIndent()
+    }
 }

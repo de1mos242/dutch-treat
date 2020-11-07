@@ -3,7 +3,9 @@ package net.de1mos.dutchtreat.jaicf
 import com.justai.jaicf.activator.regex.regex
 import com.justai.jaicf.context.ActionContext
 import com.justai.jaicf.model.scenario.Scenario
-import net.de1mos.dutchtreat.ParticipantNotFound
+import net.de1mos.dutchtreat.NoPurchasesException
+import net.de1mos.dutchtreat.ParticipantNotFoundException
+import net.de1mos.dutchtreat.PurchaseNotFoundException
 import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.services.BalanceService
 import net.de1mos.dutchtreat.services.EventService
@@ -91,8 +93,32 @@ class DutchTreatScenario(
                         try {
                             val p = eventService.addPurchase(e, participantName, description, cost)
                             reactions.say("Great, added $participantName purchase for ${p.amount.toPrettyString()}")
-                        } catch (e: ParticipantNotFound) {
+                        } catch (e: ParticipantNotFoundException) {
                             reactions.say("There is no participant with name ${e.name}, add him or her before")
+                        }
+                    }
+                }
+
+                state("add consumer") {
+                    globalActivators {
+                        regex("Add (?<consumer>.+) as a consumer to purchase (?<position>[\\d]+).*")
+                        regex("Add (?<consumer>.+) as a consumer to the last purchase(?<position>\\-?1?)")
+                    }
+                    action {
+                        val e = getUserEvent() ?: return@action
+                        val consumerName = getValFromRegex("consumer")
+                        val positinString = getSafeValFromRegex("position")
+                        val position = (if (positinString.isNullOrEmpty()) "-1" else positinString).toInt()
+
+                        try {
+                            val p = eventService.addConsumerToPurchase(e, consumerName, position)
+                            reactions.say("Great, I've added $consumerName as a consumer for ${p.description}")
+                        } catch (e: ParticipantNotFoundException) {
+                            reactions.say("There is no participant with name ${e.name}, add him or her before")
+                        } catch (e: NoPurchasesException) {
+                            reactions.say("There are no purchases yet, add a new one")
+                        } catch (e: PurchaseNotFoundException) {
+                            reactions.say("Purchase with position ${e.position} not found")
                         }
                     }
                 }
@@ -106,7 +132,12 @@ class DutchTreatScenario(
                             reactions.say("There are no purchases yet, add a new one")
                         } else {
                             reactions.say("Purchases list:\n" + purchases.mapIndexed { index, purchase ->
-                                "${index + 1}. ${purchase.buyerName} bought ${purchase.description} for ${purchase.amount.toPrettyString()}"
+                                val consumers = if (purchase.consumers.isEmpty()) "" else {
+                                    " for " + purchase.consumers.reduceIndexed {
+                                        consumerIdx, acc, s -> acc + if (consumerIdx < purchase.consumers.size-1) {", "} else {" and "} + s
+                                    }
+                                }
+                                "${index + 1}. ${purchase.buyerName} bought ${purchase.description} for ${purchase.amount.toPrettyString()}" + consumers
                             }.joinToString("\n"))
                         }
                     }
@@ -123,7 +154,7 @@ class DutchTreatScenario(
                         try {
                             val t = eventService.addTransfer(e, senderName, receiverName, cost)
                             reactions.say("Great, sent ${t.amount.toPrettyString()} from ${t.senderName} to ${t.receiverName}")
-                        } catch (e: ParticipantNotFound) {
+                        } catch (e: ParticipantNotFoundException) {
                             reactions.say("There is no participant with name ${e.name}, add him or her before")
                         }
                     }
@@ -168,6 +199,7 @@ class DutchTreatScenario(
     }
 
     private fun ActionContext.getValFromRegex(group: String = "val") = activator.regex?.group(group)!!.trim()
+    private fun ActionContext.getSafeValFromRegex(group: String = "val") = activator.regex?.matcher?.group(group)?.trim()
     private fun ActionContext.getUserEvent(): Event? {
         val e = userPreferencesService.getUserCurrentEvent(context.clientId)
         if (e == null) {

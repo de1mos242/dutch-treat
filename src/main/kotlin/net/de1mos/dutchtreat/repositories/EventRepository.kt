@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 
 data class Participant(val id: String, val name: String)
-data class Purchase(val id: String, val buyerId: String, val description: String, val amount: BigDecimal)
+data class Purchase(val id: String, val buyerId: String, val description: String, val amount: BigDecimal, val consumerIds: List<String>? = null)
 data class Transfer(val id: String, val senderId: String, val receiverId: String, val amount: BigDecimal)
 
 @Document(collection = "events")
