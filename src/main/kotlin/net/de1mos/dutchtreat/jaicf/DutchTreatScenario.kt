@@ -19,7 +19,10 @@ class DutchTreatScenario(
         bot = object : Scenario() {
             init {
                 state("start") {
-                    globalActivators { event("/start") }
+                    globalActivators {
+                        event("/start")
+                        regex("/start")
+                    }
                     action {
                         reactions.say("""
                             Hello, this is a Dutch Treat bot!
