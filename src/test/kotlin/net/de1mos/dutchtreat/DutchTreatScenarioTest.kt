@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import java.util.*
 
 @SpringBootTest
 class DutchTreatScenarioTest() {
@@ -176,6 +177,112 @@ class DutchTreatScenarioTest() {
             1. test
             2. test2
             3. test3
+        """.trimIndent()
+    }
+
+    @Test
+    fun `invite users to event`() {
+        val user1 = UUID.randomUUID().toString()
+        val user2 = UUID.randomUUID().toString()
+        val user3 = UUID.randomUUID().toString()
+
+        helper.withClientId(user1)
+        helper.query("show events") responds "There are no events yet, try to start a new one"
+        helper.query("start event test")
+        helper.query("show events") responds """
+            Your events:
+            1. test
+        """.trimIndent()
+
+        helper.withClientId(user2)
+        helper.query("show events") responds "There are no events yet, try to start a new one"
+        helper.withClientId(user3)
+        helper.query("show events") responds "There are no events yet, try to start a new one"
+
+        helper.withClientId(user1)
+        val invitation = helper.query("invite user").reactions.text?.response?.text!!
+        val regex = "Send this code to user: ([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})".toRegex()
+        Assertions.assertTrue(regex.matches(invitation))
+        val code = regex.find(invitation)?.groups?.get(1)!!.value
+
+        helper.withClientId(user2)
+        helper.query("start event test2")
+        helper.query("show events") responds """
+            Your events:
+            1. test2
+        """.trimIndent()
+        helper.query("activate $code") responds "You were successfully added to event test"
+        helper.query("show events") responds """
+            Your events:
+            1. test
+            2. test2
+        """.trimIndent()
+
+        helper.withClientId(user3)
+        helper.query("show events") responds "There are no events yet, try to start a new one"
+
+        helper.withClientId(user1)
+        helper.query("show events") responds """
+            Your events:
+            1. test
+        """.trimIndent()
+
+        helper.withClientId(user3)
+        helper.query("activate $code") responds "Invitation code not found"
+    }
+
+    @Test
+    fun `complex demo test`() {
+        val user1 = UUID.randomUUID().toString()
+        val user2 = UUID.randomUUID().toString()
+
+        helper.withClientId(user1)
+        helper.query("Start event test")
+        helper.query("Add participant Denis")
+        helper.query("Add participant Nick")
+        helper.query("Add participant Linda")
+        helper.query("get balance") responds """
+            Current balance
+            Denis owes nobody and nobody owes him or her
+            Nick owes nobody and nobody owes him or her
+            Linda owes nobody and nobody owes him or her
+        """.trimIndent()
+
+        val invitation = helper.query("invite user").reactions.text?.response?.text!!
+        val regex = "Send this code to user: ([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})".toRegex()
+        Assertions.assertTrue(regex.matches(invitation))
+        val code = regex.find(invitation)?.groups?.get(1)!!.value
+
+        helper.withClientId(user2)
+        helper.query("activate $code")
+
+        helper.query("Denis bought meat for 400")
+        helper.query("Nick bought beer for 230.04")
+        helper.query("Linda gave Nick 15")
+        helper.query("Linda gave Denis 150")
+        helper.query("get balance") responds """
+            Current balance
+            Denis should get 39,99
+            Nick should get 5,03
+            Linda should give 45,01
+        """.trimIndent()
+
+        helper.withClientId(user1)
+        helper.query("get balance") responds """
+            Current balance
+            Denis should get 39,99
+            Nick should get 5,03
+            Linda should give 45,01
+        """.trimIndent()
+        helper.query("Linda gave Nick 5")
+
+        helper.withClientId(user2)
+        helper.query("Linda gave Denis 40")
+        helper.query("get balance") responds """
+            Current balance
+            Denis owes nobody and nobody owes him or her
+            Nick owes nobody and nobody owes him or her
+            Linda owes nobody and nobody owes him or her
         """.trimIndent()
     }
 }

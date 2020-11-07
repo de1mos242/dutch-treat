@@ -4,12 +4,14 @@ import com.justai.jaicf.activator.regex.regex
 import com.justai.jaicf.context.ActionContext
 import com.justai.jaicf.model.scenario.Scenario
 import net.de1mos.dutchtreat.EventNotFoundException
+import net.de1mos.dutchtreat.InvitationCodeNotFoundException
 import net.de1mos.dutchtreat.NoPurchasesException
 import net.de1mos.dutchtreat.ParticipantNotFoundException
 import net.de1mos.dutchtreat.PurchaseNotFoundException
 import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.services.BalanceService
 import net.de1mos.dutchtreat.services.EventService
+import net.de1mos.dutchtreat.services.InvitationService
 import net.de1mos.dutchtreat.services.UserPreferencesService
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -19,7 +21,8 @@ import java.text.DecimalFormat
 class DutchTreatScenario(
         val eventService: EventService,
         val userPreferencesService: UserPreferencesService,
-        val balanceService: BalanceService
+        val balanceService: BalanceService,
+        val invitationService: InvitationService
 ) {
     final val bot: Scenario
 
@@ -80,6 +83,30 @@ class DutchTreatScenario(
                             reactions.say("Switched to event $eventName")
                         } catch (e: EventNotFoundException) {
                             reactions.say("There is no event ${e.eventName}, but you could start it")
+                        }
+                    }
+                }
+
+                state("invite user") {
+                    globalActivators { regex("invite user") }
+                    action {
+                        val e = getUserEvent() ?: return@action
+                        val code = invitationService.invite(e)
+                        reactions.say("Send this code to user: $code")
+                    }
+                }
+
+                state("activate invitation code") {
+                    globalActivators { regex("activate (?<val>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}).*") }
+                    action {
+                        val code = getValFromRegex()
+                        try {
+                            val event = invitationService.applyInvitation(context.clientId, code)
+                            reactions.say("You were successfully added to event ${event.name}")
+                        } catch (e:InvitationCodeNotFoundException) {
+                            reactions.say("Invitation code not found")
+                        } catch (e: EventNotFoundException) {
+                            reactions.say("event is gone...")
                         }
                     }
                 }
