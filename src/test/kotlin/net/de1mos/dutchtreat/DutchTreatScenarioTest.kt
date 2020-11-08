@@ -26,12 +26,22 @@ class DutchTreatScenarioTest() {
     @Test
     fun `catch all test`() {
         val query = "i don't know"
-        helper.query(query) responds "I don't know what you mean with $query"
+        helper.query(query) responds "I don't know what you mean with $query, send 'help' to see available commands"
     }
 
     @Test
     fun `handle start`() {
         Assertions.assertTrue(helper.event("/start").reactions.text?.response?.text?.startsWith("Hello") ?: false)
+    }
+
+    @Test
+    fun `handle help`() {
+        Assertions.assertTrue(helper.query("help").reactions.text?.response?.text?.startsWith("You can send me these common commands") ?: false)
+    }
+
+    @Test
+    fun `handle full help`() {
+        Assertions.assertTrue(helper.query("full help").reactions.text?.response?.text?.startsWith("You can send me these commands") ?: false)
     }
 
     @Test
