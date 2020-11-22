@@ -3,6 +3,7 @@ package net.de1mos.dutchtreat.services
 import net.de1mos.dutchtreat.NoPurchasesException
 import net.de1mos.dutchtreat.ParticipantNotFoundException
 import net.de1mos.dutchtreat.PurchaseNotFoundException
+import net.de1mos.dutchtreat.TransferNotFoundException
 import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.Participant
@@ -57,7 +58,7 @@ class EventService(val eventRepository: EventRepository) {
     }
 
     fun removePurchase(event: Event, purchaseNumber: Int): PurchaseDto {
-        val purchase = findPurchase(event, purchaseNumber-1)
+        val purchase = findPurchase(event, purchaseNumber - 1)
         val newPurchases = event.purchases!!.filter { it.id != purchase.id }
         eventRepository.save(event.copy(purchases = newPurchases))
         return toDto(event, purchase, event.participants)
@@ -86,12 +87,11 @@ class EventService(val eventRepository: EventRepository) {
     }
 
     private fun findPurchase(event: Event, purchaseIndex: Int): Purchase {
-        val purchase = try {
+        return try {
             event.purchases?.get(purchaseIndex) ?: throw PurchaseNotFoundException(purchaseIndex + 1)
         } catch (e: IndexOutOfBoundsException) {
             throw PurchaseNotFoundException(purchaseIndex + 1)
         }
-        return purchase
     }
 
     fun getPurchases(event: Event): List<PurchaseDto> {
@@ -118,13 +118,32 @@ class EventService(val eventRepository: EventRepository) {
         return TransferDto(sender.name, receiver.name, amount)
     }
 
-    fun getTransfers(event: Event): List<TransferDto> {
-        return event.transfers?.map {
-            TransferDto(
-                    event.participants?.find { participant -> participant.id == it.senderId }!!.name,
-                    event.participants.find { participant -> participant.id == it.receiverId }!!.name,
-                    it.amount
-            )
-        } ?: emptyList()
+    fun removeTransfer(event: Event, positionNumber: Int): TransferDto {
+        val transfer = findTransfer(event, positionNumber - 1)
+        val newTransfers = event.transfers!!.filter { it.id != transfer.id }
+        eventRepository.save(event.copy(transfers = newTransfers))
+        return transferDto(event, transfer)
     }
+
+    fun getTransfers(event: Event): List<TransferDto> {
+        return event.transfers?.map { transferDto(event, it) } ?: emptyList()
+    }
+
+    private fun transferDto(event: Event, it: Transfer): TransferDto {
+        return TransferDto(
+                event.participants?.find { participant -> participant.id == it.senderId }!!.name,
+                event.participants.find { participant -> participant.id == it.receiverId }!!.name,
+                it.amount
+        )
+    }
+
+    private fun findTransfer(event: Event, transferIndex: Int): Transfer {
+        return try {
+            event.transfers?.get(transferIndex) ?: throw TransferNotFoundException(transferIndex + 1)
+        } catch (e: IndexOutOfBoundsException) {
+            throw TransferNotFoundException(transferIndex + 1)
+        }
+    }
+
+
 }

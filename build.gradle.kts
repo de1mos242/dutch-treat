@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "net.de1mos"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.2-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 configurations {
@@ -36,7 +36,9 @@ repositories {
 
 extra["testcontainersVersion"] = "1.14.3"
 
-
+springBoot {
+	buildInfo()
+}
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")

@@ -47,6 +47,11 @@ class DutchTreatScenarioTest() {
     }
 
     @Test
+    fun `handle version`() {
+        helper.query("version") responds "0.0.2-SNAPSHOT"
+    }
+
+    @Test
     fun `create event`() {
         val eventName = "party"
         helper.query("get current event") responds "There is no current event, but you can create a new one"
@@ -148,6 +153,29 @@ class DutchTreatScenarioTest() {
             Transfers list:
             1. Nick gave Linda 50,00
             2. Denis gave Nick 150,45
+        """.trimIndent()
+    }
+
+    @Test
+    fun `remove transfer`() {
+        helper.query("start event test")
+        helper.query("Add participant Denis")
+        helper.query("Add participant Nick")
+        helper.query("Add participant Linda")
+        helper.query("Nick gave Linda 50")
+        helper.query("Denis gave Nick 150.45")
+        helper.query("Sam gave Nick 150.45")
+        helper.query("Denis gave Sam 150.45")
+        helper.query("get transfers") responds """
+            Transfers list:
+            1. Nick gave Linda 50,00
+            2. Denis gave Nick 150,45
+        """.trimIndent()
+        helper.query("remove transfer 2") responds "Transfer 'Denis gave Nick 150,45' removed"
+        helper.query("remove transfer 4") responds "Transfer with position 4 not found"
+        helper.query("get transfers") responds """
+            Transfers list:
+            1. Nick gave Linda 50,00
         """.trimIndent()
     }
 
@@ -310,6 +338,8 @@ class DutchTreatScenarioTest() {
             Linda should give 45,01
         """.trimIndent()
         helper.query("Linda gave Nick 5")
+        helper.query("Linda gave Denis 50")
+        helper.query("remove transfer 4")
 
         helper.withClientId(user2)
         helper.query("Linda gave Denis 40")

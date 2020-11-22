@@ -8,21 +8,24 @@ import net.de1mos.dutchtreat.InvitationCodeNotFoundException
 import net.de1mos.dutchtreat.NoPurchasesException
 import net.de1mos.dutchtreat.ParticipantNotFoundException
 import net.de1mos.dutchtreat.PurchaseNotFoundException
+import net.de1mos.dutchtreat.TransferNotFoundException
 import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.services.BalanceService
 import net.de1mos.dutchtreat.services.EventService
 import net.de1mos.dutchtreat.services.InvitationService
 import net.de1mos.dutchtreat.services.UserPreferencesService
+import org.springframework.boot.info.BuildProperties
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
 @Service
 class DutchTreatScenario(
-        val eventService: EventService,
-        val userPreferencesService: UserPreferencesService,
-        val balanceService: BalanceService,
-        val invitationService: InvitationService
+        private val eventService: EventService,
+        private val userPreferencesService: UserPreferencesService,
+        private val balanceService: BalanceService,
+        private val invitationService: InvitationService,
+        private val buildProperties: BuildProperties
 ) {
     final val bot: Scenario
 
@@ -42,6 +45,11 @@ class DutchTreatScenario(
                             To see the list of available commands just send "help".
                         """.trimIndent())
                     }
+                }
+
+                state("version") {
+                    globalActivators { regex("version") }
+                    action { reactions.say(buildProperties.version) }
                 }
 
                 state("help") {
@@ -88,6 +96,7 @@ class DutchTreatScenario(
                         -- Transfers
                         %Participant name% gave %Participant name% %Transfer amount% - to transfer money between participants
                         Get transfers - show all transfers
+                        Remove transfer %Position number% - remove transfer at position
                         
                         -- Balance
                         get balance - show current event balance between participants
@@ -281,6 +290,20 @@ class DutchTreatScenario(
                     }
                 }
 
+                state("remove transfer") {
+                    globalActivators { regex("Remove transfer (?<position>[\\d]+).*") }
+                    action {
+                        val e = getUserEvent() ?: return@action
+                        val position = getValFromRegex("position").toInt()
+                        try {
+                            val t = eventService.removeTransfer(e, position)
+                            reactions.say("Transfer '${t.toPrettyString()}' removed")
+                        } catch (e: TransferNotFoundException) {
+                            reactions.say("Transfer with position ${e.position} not found")
+                        }
+                    }
+                }
+
                 state("get transfers") {
                     globalActivators { regex("Get transfers") }
                     action {
@@ -289,8 +312,8 @@ class DutchTreatScenario(
                         if (transfers.isEmpty()) {
                             reactions.say("There are no transfers yet, add a new one")
                         } else {
-                            reactions.say("Transfers list:\n" + transfers.mapIndexed { index, purchase ->
-                                "${index + 1}. ${purchase.senderName} gave ${purchase.receiverName} ${purchase.amount.toPrettyString()}"
+                            reactions.say("Transfers list:\n" + transfers.mapIndexed { index, transfer ->
+                                "${index + 1}. ${transfer.toPrettyString()}"
                             }.joinToString("\n"))
                         }
                     }
@@ -341,5 +364,9 @@ class DutchTreatScenario(
 
     private fun BigDecimal.toPrettyString(): String {
         return DecimalFormat("0.00").format(this)
+    }
+
+    private fun EventService.TransferDto.toPrettyString(): String {
+        return "${this.senderName} gave ${this.receiverName} ${this.amount.toPrettyString()}"
     }
 }
