@@ -36,12 +36,14 @@ class DutchTreatScenarioTest() {
 
     @Test
     fun `handle help`() {
-        Assertions.assertTrue(helper.query("help").reactions.text?.response?.text?.startsWith("You can send me these common commands") ?: false)
+        Assertions.assertTrue(helper.query("help").reactions.text?.response?.text?.startsWith("You can send me these common commands")
+                ?: false)
     }
 
     @Test
     fun `handle full help`() {
-        Assertions.assertTrue(helper.query("full help").reactions.text?.response?.text?.startsWith("You can send me these commands") ?: false)
+        Assertions.assertTrue(helper.query("full help").reactions.text?.response?.text?.startsWith("You can send me these commands")
+                ?: false)
     }
 
     @Test
@@ -76,6 +78,27 @@ class DutchTreatScenarioTest() {
             1. Denis bought meat for 400,00
             2. Nick bought beer for 230,03
         """.trimIndent()
+    }
+
+    @Test
+    fun `remove purchase`() {
+        helper.query("Start event test")
+        helper.query("Add participant Denis")
+        helper.query("Add participant Nick")
+        helper.query("Get purchases")
+        helper.query("Denis bought meat for 400 rubles")
+        helper.query("Nick bought beer for 230.03")
+        helper.query("Get purchases") responds """
+            Purchases list:
+            1. Denis bought meat for 400,00
+            2. Nick bought beer for 230,03
+        """.trimIndent()
+        helper.query("Remove purchase 1") responds "Purchase meat removed"
+        helper.query("Get purchases") responds """
+            Purchases list:
+            1. Nick bought beer for 230,03
+        """.trimIndent()
+        helper.query("Remove purchase 4") responds "Purchase with position 4 not found"
     }
 
     @Test
@@ -267,7 +290,9 @@ class DutchTreatScenarioTest() {
         helper.query("activate $code")
 
         helper.query("Denis bought meat for 400")
+        helper.query("Linda bought ice cream for 333")
         helper.query("Nick bought beer for 230.04")
+        helper.query("Remove purchase 2")
         helper.query("Linda gave Nick 15")
         helper.query("Linda gave Denis 150")
         helper.query("get balance") responds """

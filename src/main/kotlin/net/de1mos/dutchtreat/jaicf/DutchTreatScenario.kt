@@ -46,7 +46,8 @@ class DutchTreatScenario(
 
                 state("help") {
                     globalActivators { regex("help") }
-                    action { reactions.say("""
+                    action {
+                        reactions.say("""
                         You can send me these common commands:
                         start event %Event name%
                         add participant %Participant name%
@@ -54,12 +55,14 @@ class DutchTreatScenario(
                         %Participant name% gave %Participant name% %Transfer amount% - to transfer money between participants
                         get balance - show current event balance between participants
                         full help - to see all available commands
-                    """.trimIndent()) }
+                    """.trimIndent())
+                    }
                 }
 
                 state("full help") {
                     globalActivators { regex("full help") }
-                    action { reactions.say("""
+                    action {
+                        reactions.say("""
                         You can send me these commands:
                         -- Events
                         start event %Event name%
@@ -80,6 +83,7 @@ class DutchTreatScenario(
                         Get purchases - show all purchases with their positions
                         Add %Participant name% as a consumer to purchase %Position number% - add concrete consumers to a purchase. Without it all participants consider as consumers
                         Add %Participant name% as a consumer to the last purchase - add concrete consumers to the last purchase. Without it all participants consider as consumers
+                        Remove purchase %Position number% - remove purchase at position
                         
                         -- Transfers
                         %Participant name% gave %Participant name% %Transfer amount% - to transfer money between participants
@@ -87,7 +91,8 @@ class DutchTreatScenario(
                         
                         -- Balance
                         get balance - show current event balance between participants
-                    """.trimIndent()) }
+                    """.trimIndent())
+                    }
                 }
 
                 state("create event") {
@@ -115,7 +120,7 @@ class DutchTreatScenario(
                         if (events.isEmpty()) {
                             reactions.say("There are no events yet, try to start a new one")
                         } else {
-                            reactions.say("Your events:\n" + events.mapIndexed { index, event -> "${index+1}. ${event.name}" }.joinToString("\n"))
+                            reactions.say("Your events:\n" + events.mapIndexed { index, event -> "${index + 1}. ${event.name}" }.joinToString("\n"))
                         }
                     }
                 }
@@ -149,7 +154,7 @@ class DutchTreatScenario(
                         try {
                             val event = invitationService.applyInvitation(context.clientId, code)
                             reactions.say("You were successfully added to event ${event.name}")
-                        } catch (e:InvitationCodeNotFoundException) {
+                        } catch (e: InvitationCodeNotFoundException) {
                             reactions.say("Invitation code not found")
                         } catch (e: EventNotFoundException) {
                             reactions.say("event is gone...")
@@ -193,6 +198,20 @@ class DutchTreatScenario(
                             reactions.say("Great, added $participantName purchase for ${p.amount.toPrettyString()}")
                         } catch (e: ParticipantNotFoundException) {
                             reactions.say("There is no participant with name ${e.name}, add him or her before")
+                        }
+                    }
+                }
+
+                state("remove purchase") {
+                    globalActivators { regex("Remove purchase (?<position>[\\d]+).*") }
+                    action {
+                        val e = getUserEvent() ?: return@action
+                        val position = getValFromRegex("position").toInt()
+                        try {
+                            val p = eventService.removePurchase(e, position)
+                            reactions.say("Purchase ${p.description} removed")
+                        } catch (e: PurchaseNotFoundException) {
+                            reactions.say("Purchase with position ${e.position} not found")
                         }
                     }
                 }

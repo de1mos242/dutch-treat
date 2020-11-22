@@ -56,6 +56,13 @@ class EventService(val eventRepository: EventRepository) {
         return PurchaseDto(buyerName, amount, description, emptyList())
     }
 
+    fun removePurchase(event: Event, purchaseNumber: Int): PurchaseDto {
+        val purchase = findPurchase(event, purchaseNumber-1)
+        val newPurchases = event.purchases!!.filter { it.id != purchase.id }
+        eventRepository.save(event.copy(purchases = newPurchases))
+        return toDto(event, purchase, event.participants)
+    }
+
     fun addConsumerToPurchase(event: Event, consumerName: String, purchaseNumber: Int = -1): PurchaseDto {
         val p = getParticipant(event, consumerName) ?: throw ParticipantNotFoundException(consumerName)
         var purchaseIndex = purchaseNumber - 1
@@ -65,21 +72,26 @@ class EventService(val eventRepository: EventRepository) {
             }
             purchaseIndex = event.purchases.size - 1
         }
-        val purchase = try {
-            event.purchases?.get(purchaseIndex) ?: throw PurchaseNotFoundException(purchaseNumber)
-        } catch (e:IndexOutOfBoundsException) {
-            throw PurchaseNotFoundException(purchaseNumber)
-        }
+        val purchase = findPurchase(event, purchaseIndex)
         if (purchase.consumerIds != null && purchase.consumerIds.contains(p.id)) {
             return toDto(event, purchase, event.participants)
         }
         val newConsumers = purchase.consumerIds?.toMutableList() ?: ArrayList()
         newConsumers.add(p.id)
         val newPurchase = purchase.copy(consumerIds = newConsumers)
-        val newPurchases = event.purchases.toMutableList()
+        val newPurchases = event.purchases!!.toMutableList()
         newPurchases[purchaseIndex] = newPurchase
         eventRepository.save(event.copy(purchases = newPurchases))
         return toDto(event, purchase, event.participants)
+    }
+
+    private fun findPurchase(event: Event, purchaseIndex: Int): Purchase {
+        val purchase = try {
+            event.purchases?.get(purchaseIndex) ?: throw PurchaseNotFoundException(purchaseIndex + 1)
+        } catch (e: IndexOutOfBoundsException) {
+            throw PurchaseNotFoundException(purchaseIndex + 1)
+        }
+        return purchase
     }
 
     fun getPurchases(event: Event): List<PurchaseDto> {
