@@ -1,7 +1,9 @@
 package net.de1mos.dutchtreat
 
+import com.justai.jaicf.BotEngine
+import com.justai.jaicf.context.manager.InMemoryBotContextManager
 import com.justai.jaicf.reactions.text
-import com.justai.jaicf.test.ScenarioTest
+import com.justai.jaicf.test.BotTest
 import net.de1mos.dutchtreat.jaicf.DutchTreatScenario
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -11,15 +13,15 @@ import org.springframework.boot.test.context.SpringBootTest
 import java.util.*
 
 @SpringBootTest
-class DutchTreatScenarioTest() {
+class DutchTreatScenarioTest {
 
     @Autowired
     lateinit var scenario: DutchTreatScenario
-    lateinit var helper: ScenarioTest
+    lateinit var helper: BotTest
 
     @BeforeEach
     fun init() {
-        helper = ScenarioTest(scenario.bot)
+        helper = BotTest(BotEngine(scenario.bot.model, InMemoryBotContextManager, scenario.activators))
         helper.init()
     }
 
@@ -38,17 +40,24 @@ class DutchTreatScenarioTest() {
     fun `handle help`() {
         Assertions.assertTrue(helper.query("help").reactions.text?.response?.text?.startsWith("You can send me these common commands")
                 ?: false)
+        Assertions.assertTrue(helper.query("what you can do?").reactions.text?.response?.text?.startsWith("You can send me these common commands")
+                ?: false)
+        Assertions.assertTrue(helper.query("что ты умеешь").reactions.text?.response?.text?.startsWith("You can send me these common commands")
+                ?: false)
     }
-
     @Test
     fun `handle full help`() {
         Assertions.assertTrue(helper.query("full help").reactions.text?.response?.text?.startsWith("You can send me these commands")
+                ?: false)
+        Assertions.assertTrue(helper.query("show all commands").reactions.text?.response?.text?.startsWith("You can send me these commands")
+                ?: false)
+        Assertions.assertTrue(helper.query("покажи весь список").reactions.text?.response?.text?.startsWith("You can send me these commands")
                 ?: false)
     }
 
     @Test
     fun `handle version`() {
-        helper.query("version") responds "0.0.2-SNAPSHOT"
+        helper.query("version") responds "0.0.3-SNAPSHOT"
     }
 
     @Test
@@ -348,6 +357,26 @@ class DutchTreatScenarioTest() {
             Denis owes nobody and nobody owes him or her
             Nick owes nobody and nobody owes him or her
             Linda owes nobody and nobody owes him or her
+        """.trimIndent()
+    }
+
+    @Test
+    fun `get balance from dialogflow activator`() {
+        helper.query("Start event test")
+        helper.query("Add participant Denis")
+        helper.query("get balance") responds """
+            Current balance
+            Denis owes nobody and nobody owes him or her
+        """.trimIndent()
+
+        helper.query("show me current state") responds """
+            Current balance
+            Denis owes nobody and nobody owes him or her
+        """.trimIndent()
+
+        helper.query("Что по деньгам") responds """
+            Current balance
+            Denis owes nobody and nobody owes him or her
         """.trimIndent()
     }
 }

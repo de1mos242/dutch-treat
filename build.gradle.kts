@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "net.de1mos"
-version = "0.0.2-SNAPSHOT"
+version = "0.0.3-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 configurations {
@@ -19,7 +19,7 @@ configurations {
 		extendsFrom(configurations.annotationProcessor.get())
 	}
 }
-val jaicf = "0.8.2"
+val jaicf = "0.9.0"
 val logback = "1.2.3"
 
 // Main class to run application on heroku. Either JaicpPollerKt, or JaicpServerKt. Will propagate to .jar main class.
@@ -58,6 +58,7 @@ dependencies {
 	implementation("com.justai.jaicf:jaicp:$jaicf")
 	implementation("com.justai.jaicf:caila:$jaicf")
 	implementation("com.justai.jaicf:telegram:$jaicf")
+	implementation("com.justai.jaicf:dialogflow:$jaicf")
 }
 
 tasks.withType<Test> {

@@ -1,5 +1,10 @@
 package net.de1mos.dutchtreat.jaicf
 
+import com.justai.jaicf.activator.ActivatorFactory
+import com.justai.jaicf.activator.dialogflow.DialogflowAgentConfig
+import com.justai.jaicf.activator.dialogflow.DialogflowConnector
+import com.justai.jaicf.activator.dialogflow.DialogflowIntentActivator
+import com.justai.jaicf.activator.regex.RegexActivator
 import com.justai.jaicf.activator.regex.regex
 import com.justai.jaicf.context.ActionContext
 import com.justai.jaicf.model.scenario.Scenario
@@ -28,8 +33,27 @@ class DutchTreatScenario(
         private val buildProperties: BuildProperties
 ) {
     final val bot: Scenario
+    final val activators: Array<ActivatorFactory>
 
     init {
+        val dialogFlowActivatorEn = DialogflowIntentActivator.Factory(
+                DialogflowConnector(DialogflowAgentConfig(
+                        language = "en",
+                        credentialsResourcePath = "/dialogflow_account.json"
+                ))
+        )
+        val dialogFlowActivatorRu = DialogflowIntentActivator.Factory(
+                DialogflowConnector(DialogflowAgentConfig(
+                        language = "ru",
+                        credentialsResourcePath = "/dialogflow_account.json"
+                ))
+        )
+        activators = arrayOf(
+                RegexActivator,
+                dialogFlowActivatorEn,
+                dialogFlowActivatorRu
+        )
+
         bot = object : Scenario() {
             init {
                 state("start") {
@@ -53,7 +77,10 @@ class DutchTreatScenario(
                 }
 
                 state("help") {
-                    globalActivators { regex("help") }
+                    globalActivators {
+                        regex("help")
+                        intent("help")
+                    }
                     action {
                         reactions.say("""
                         You can send me these common commands:
@@ -68,7 +95,10 @@ class DutchTreatScenario(
                 }
 
                 state("full help") {
-                    globalActivators { regex("full help") }
+                    globalActivators {
+                        regex("full help")
+                        intent("full help")
+                    }
                     action {
                         reactions.say("""
                         You can send me these commands:
@@ -320,7 +350,10 @@ class DutchTreatScenario(
                 }
 
                 state("get balance") {
-                    globalActivators { regex("Get balance") }
+                    globalActivators {
+                        regex("Get balance")
+                        intent("Get balance")
+                    }
                     action {
                         val e = getUserEvent() ?: return@action
                         val balance = balanceService.calculateBalance(e)
