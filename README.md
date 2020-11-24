@@ -1,4 +1,4 @@
-# dutch-treat
+# Dutch treat
 Dutch treat app
 
 # What's new:
