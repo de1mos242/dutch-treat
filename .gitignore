@@ -2,5 +2,3 @@
 target
 .gradle
 build
-
-src/main/resources/dialogflow_account.json

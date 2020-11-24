@@ -14,6 +14,7 @@ import net.de1mos.dutchtreat.NoPurchasesException
 import net.de1mos.dutchtreat.ParticipantNotFoundException
 import net.de1mos.dutchtreat.PurchaseNotFoundException
 import net.de1mos.dutchtreat.TransferNotFoundException
+import net.de1mos.dutchtreat.config.DialogflowConfig
 import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.services.BalanceService
 import net.de1mos.dutchtreat.services.EventService
@@ -30,7 +31,8 @@ class DutchTreatScenario(
         private val userPreferencesService: UserPreferencesService,
         private val balanceService: BalanceService,
         private val invitationService: InvitationService,
-        private val buildProperties: BuildProperties
+        private val buildProperties: BuildProperties,
+        private val dialogflowConfig: DialogflowConfig
 ) {
     final val bot: Scenario
     final val activators: Array<ActivatorFactory>
@@ -39,13 +41,13 @@ class DutchTreatScenario(
         val dialogFlowActivatorEn = DialogflowIntentActivator.Factory(
                 DialogflowConnector(DialogflowAgentConfig(
                         language = "en",
-                        credentialsResourcePath = "/dialogflow_account.json"
+                        credentials = dialogflowConfig.credentialsInputStream
                 ))
         )
         val dialogFlowActivatorRu = DialogflowIntentActivator.Factory(
                 DialogflowConnector(DialogflowAgentConfig(
                         language = "ru",
-                        credentialsResourcePath = "/dialogflow_account.json"
+                        credentials = dialogflowConfig.credentialsInputStream
                 ))
         )
         activators = arrayOf(
