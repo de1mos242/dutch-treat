@@ -46,10 +46,10 @@ jobs:
 #         run: docker push de1m0s/dutch-treat:${{ github.run_number }}
       
       - name: push image to heroku registry
-        run: docker tag de1m0s/dutch-treat:${{ github.run_number }} registry.heroku.com/dutch-treat/app && docker push registry.heroku.com/dutch-treat/app
+        run: docker tag de1m0s/dutch-treat:${{ github.run_number }} registry.heroku.com/dutch-treat && docker push registry.heroku.com/dutch-treat
         
       - name: release to heroku
-        run: heroku container:release dutch-treat app
+        run: heroku container:release -a dutch-treat
        
        
        
