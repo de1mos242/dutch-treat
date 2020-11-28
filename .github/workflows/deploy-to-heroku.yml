@@ -37,7 +37,8 @@ jobs:
           machine git.heroku.com
               login ${HEROKU_CREDENTIALS_EMAIL}
               password ${HEROKU_CREDENTIALS_PASSWORD}
-          EOF && heroku login
+          EOF
+          heroku login
       - name: Login to heroku registry
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
