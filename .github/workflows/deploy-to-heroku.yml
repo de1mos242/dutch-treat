@@ -39,7 +39,7 @@ jobs:
       - name: Login to heroku
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
-        run: heroku auht:token
+        run: heroku auth:token
       - name: Login to heroku registry
         run: docker login --username=de1m0s242@gmail.com --password=$(heroku auth:token) registry.heroku.com
       
