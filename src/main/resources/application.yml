@@ -1,0 +1,9 @@
+dialogflow:
+
+spring:
+  data:
+    mongodb:
+      uri: url
+channels:
+  telegram:
+    token: change it

@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "net.de1mos"
-version = "0.0.3-SNAPSHOT"
+version = "0.0.4-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 configurations {
@@ -59,6 +59,8 @@ dependencies {
 	implementation("com.justai.jaicf:caila:$jaicf")
 	implementation("com.justai.jaicf:telegram:$jaicf")
 	implementation("com.justai.jaicf:dialogflow:$jaicf")
+
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 }
 
 tasks.withType<Test> {

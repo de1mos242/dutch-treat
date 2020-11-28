@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.info.BuildProperties
 import org.springframework.boot.test.context.SpringBootTest
 import java.util.*
 
@@ -17,6 +18,8 @@ class DutchTreatScenarioTest {
 
     @Autowired
     lateinit var scenario: DutchTreatScenario
+    @Autowired
+    lateinit var buildProperties: BuildProperties
     lateinit var helper: BotTest
 
     @BeforeEach
@@ -57,7 +60,7 @@ class DutchTreatScenarioTest {
 
     @Test
     fun `handle version`() {
-        helper.query("version") responds "0.0.3-SNAPSHOT"
+        helper.query("version") responds buildProperties.version
     }
 
     @Test
