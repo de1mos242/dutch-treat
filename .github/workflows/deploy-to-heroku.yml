@@ -25,15 +25,15 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
+      - name: Publish image to dockerhub
+        env:
+          DOCKER_TOKEN: ${{ secrets.DOCKER_HUB_SECRET }}
+        run: echo "$DOCKER_TOKEN" | docker login --username de1m0s --password-stdin
+      
       - name: Build image
         run: ./gradlew bootBuildImage --imageName=de1m0s/dutch-treat:${{ github.run_number }}
 
       # Runs a set of commands using the runners shell
+      
       - name: Publish image to dockerhub
-        uses: julioarruda/pushimagetoregistry@v1
-        with:
-          acr-tokenname: de1m0s
-          acr-token: ${{ secrets.DOCKER_HUB_SECRET }}
-          acr-account: de1m0s
-          acr-imagename: de1m0s/dutch-treat:${{ github.run_number }}
+        run: docker push de1m0s/dutch-treat:${{ github.run_number }}
