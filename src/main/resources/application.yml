@@ -1,3 +1,8 @@
+server:
+  jetty:
+    threads:
+      max: 50
+
 dialogflow:
 
 spring:
