@@ -54,48 +54,56 @@ dependencies {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
 
-	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
-	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
 
-	implementation("ch.qos.logback:logback-classic:$logback")
+    implementation("ch.qos.logback:logback-classic:$logback")
 
-	implementation("com.justai.jaicf:core:$jaicf")
-	implementation("com.justai.jaicf:jaicp:$jaicf")
-	implementation("com.justai.jaicf:caila:$jaicf")
-	implementation("com.justai.jaicf:telegram:$jaicf")
-	implementation("com.justai.jaicf:dialogflow:$jaicf")
+    implementation("com.justai.jaicf:core:$jaicf")
+    implementation("com.justai.jaicf:jaicp:$jaicf")
+    implementation("com.justai.jaicf:caila:$jaicf")
+    implementation("com.justai.jaicf:telegram:$jaicf")
+    implementation("com.justai.jaicf:dialogflow:$jaicf")
 
-	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 }
 
 tasks.withType<Test> {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 tasks.withType<KotlinCompile> {
-	kotlinOptions {
-		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "1.8"
-	}
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = "1.8"
+    }
 }
 
 tasks.create("stage") {
-	dependsOn("shadowJar")
+    dependsOn("shadowJar")
+}
+
+tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootBuildImage> {
+    environment = mutableMapOf(
+            "BPL_JVM_HEAD_ROOM" to "2",
+            "BPL_JVM_LOADED_CLASS_COUNT" to "35",
+            "BPL_JVM_THREAD_COUNT" to "10"
+    )
 }
 
 tasks.withType<com.justai.jaicf.plugins.jaicp.build.JaicpBuild> {
-	mainClassName.set(application.mainClassName)
+    mainClassName.set(application.mainClassName)
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-	isZip64 = true
-	// Required for Spring
-	mergeServiceFiles()
-	append("META-INF/spring.handlers")
-	append("META-INF/spring.schemas")
-	append("META-INF/spring.tooling")
-	transform(PropertiesFileTransformer().apply {
-		paths = listOf("META-INF/spring.factories")
-		mergeStrategy = "append"
-	})
+    isZip64 = true
+    // Required for Spring
+    mergeServiceFiles()
+    append("META-INF/spring.handlers")
+    append("META-INF/spring.schemas")
+    append("META-INF/spring.tooling")
+    transform(PropertiesFileTransformer().apply {
+        paths = listOf("META-INF/spring.factories")
+        mergeStrategy = "append"
+    })
 }
