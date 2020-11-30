@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "net.de1mos"
-version = "0.0.4-SNAPSHOT"
+version = "0.0.5-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 configurations {
@@ -48,6 +48,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-jetty")
+    implementation("io.sentry:sentry-spring-boot-starter:3.2.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
@@ -81,14 +82,6 @@ tasks.withType<KotlinCompile> {
 
 tasks.create("stage") {
     dependsOn("shadowJar")
-}
-
-tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootBuildImage> {
-    environment = mutableMapOf(
-            "BPL_JVM_HEAD_ROOM" to "2",
-            "BPL_JVM_LOADED_CLASS_COUNT" to "35",
-            "BPL_JVM_THREAD_COUNT" to "10"
-    )
 }
 
 tasks.withType<com.justai.jaicf.plugins.jaicp.build.JaicpBuild> {

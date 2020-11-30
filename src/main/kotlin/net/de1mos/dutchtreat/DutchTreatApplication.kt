@@ -19,5 +19,6 @@ object Dev {
 }
 
 fun main(args: Array<String>) {
+	System.getProperties()["server.port"] = System.getenv("PORT")?.toInt() ?: 8080
 	runApplication<DutchTreatApplication>(*args)
 }

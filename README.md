@@ -3,6 +3,9 @@ Dutch treat app
 
 # What's new:
 
+## 0.0.5-SNAPSHOT
+1. Add Sentry integration
+
 ## 0.0.4-SNAPSHOT
 1. Move from jaicp cloud to Heroku
 

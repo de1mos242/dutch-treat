@@ -12,3 +12,6 @@ spring:
 channels:
   telegram:
     token: change it
+
+sentry:
+  dsn:
