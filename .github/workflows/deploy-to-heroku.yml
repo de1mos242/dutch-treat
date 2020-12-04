@@ -47,10 +47,10 @@ jobs:
       - name: Login to gcloud
         env:
           GCLOUD: ${{ secrets.GCLOUD_AUTH }}
-        run: echo $GCLOUD > ~/key.json
+        run: echo $GCLOUD > key.json
       
       - name: login to gcloud
-        run: gcloud auth activate-service-account --key-file=~/key.json --project=dutchtreaten-ixex
+        run: gcloud auth activate-service-account --key-file=key.json --project=dutchtreaten-ixex
       
       - name: login to docker hub
         env:
