@@ -2,6 +2,7 @@ server:
   jetty:
     threads:
       max: 50
+  port: ${PORT:8080}
 
 dialogflow:
 
