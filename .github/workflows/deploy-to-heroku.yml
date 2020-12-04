@@ -60,15 +60,6 @@ jobs:
       - name: Build image
         run: ./gradlew bootBuildImage --imageName=gcr.io/dutchtreaten-ixex/dutch-treat
 
-      - name: Deploy service to Cloud Run
-        uses: stefda/action-cloud-run@v1.0
-        with:
-          image: gcr.io/[your-project]/[image]
-          service: run.googleapis.com
-          project: dutchtreaten-ixex
-          region: europe-north1
-          service key: ${{ secrets.GCLOUD_AUTH }}
-
 #       - name: login to docker hub
 #         env:
 #           DOCKER_TOKEN: ${{ secrets.DOCKER_HUB_SECRET }}
