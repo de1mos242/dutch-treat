@@ -25,27 +25,36 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Login to heroku
-        env:
-          HEROKU_CREDENTIALS_EMAIL: de1m0s242@gmail.com
-          HEROKU_CREDENTIALS_PASSWORD: ${{ secrets.HEROKU_TOKEN }}
-        run: |
-          cat >~/.netrc <<EOF
-          machine api.heroku.com
-              login ${HEROKU_CREDENTIALS_EMAIL}
-              password ${HEROKU_CREDENTIALS_PASSWORD}
-          machine git.heroku.com
-              login ${HEROKU_CREDENTIALS_EMAIL}
-              password ${HEROKU_CREDENTIALS_PASSWORD}
-          EOF
-          heroku login
-      - name: Login to heroku registry
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
-        run: echo "$HEROKU_API_KEY" | docker login --username=de1m0s242@gmail.com --password-stdin registry.heroku.com
+#       - name: Login to heroku
+#         env:
+#           HEROKU_CREDENTIALS_EMAIL: de1m0s242@gmail.com
+#           HEROKU_CREDENTIALS_PASSWORD: ${{ secrets.HEROKU_TOKEN }}
+#         run: |
+#           cat >~/.netrc <<EOF
+#           machine api.heroku.com
+#               login ${HEROKU_CREDENTIALS_EMAIL}
+#               password ${HEROKU_CREDENTIALS_PASSWORD}
+#           machine git.heroku.com
+#               login ${HEROKU_CREDENTIALS_EMAIL}
+#               password ${HEROKU_CREDENTIALS_PASSWORD}
+#           EOF
+#           heroku login
+#       - name: Login to heroku registry
+#         env:
+#           HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
+#         run: echo "$HEROKU_API_KEY" | docker login --username=de1m0s242@gmail.com --password-stdin registry.heroku.com
       
       - name: Build image
-        run: ./gradlew bootBuildImage --imageName=de1m0s/dutch-treat:${{ github.run_number }}
+        run: ./gradlew bootBuildImage --imageName=gcr.io/dutchtreaten-ixex/dutch-treat
+
+      - name: Deploy service to Cloud Run
+        uses: stefda/action-cloud-run@v1.0
+        with:
+          image: gcr.io/[your-project]/[image]
+          service: run.googleapis.com
+          project: dutchtreaten-ixex
+          region: europe-north1
+          service key: ${{ secrets.GCLOUD_AUTH }}
 
 #       - name: login to docker hub
 #         env:
@@ -55,11 +64,11 @@ jobs:
 #       - name: Publish image to dockerhub
 #         run: docker push de1m0s/dutch-treat:${{ github.run_number }}
       
-      - name: push image to heroku registry
-        run: docker tag de1m0s/dutch-treat:${{ github.run_number }} registry.heroku.com/dutch-treat/web && docker push registry.heroku.com/dutch-treat/web
+#       - name: push image to heroku registry
+#         run: docker tag de1m0s/dutch-treat:${{ github.run_number }} registry.heroku.com/dutch-treat/web && docker push registry.heroku.com/dutch-treat/web
         
-      - name: release to heroku
-        run: heroku container:release web -a dutch-treat
+#       - name: release to heroku
+#         run: heroku container:release web -a dutch-treat
        
        
        
