@@ -69,23 +69,7 @@ jobs:
         run: docker push gcr.io/dutchtreaten-ixex/dutch-treat
       
       - name: Deploy to GCP
-        env:
-          CHANNELS_TELEGRAM_TOKEN: ${{ secrets.CHANNELS_TELEGRAM_TOKEN }}
-          DIALOGFLOW: ${{ secrets.DIALOGFLOW }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          SPRING_DATA_MONGODB_URI: ${{ secrets.SPRING_DATA_MONGODB_URI }}
-          BPL_JVM_THREAD_COUNT: 2
-          BPL_JVM_LOADED_CLASS_COUNT: 35
-          BPL_JVM_HEAD_ROOM: 2
-        run: |
-          gcloud run deploy dutch-treat --image gcr.io/dutchtreaten-ixex/dutch-treat --platform managed --region=asia-northeast1 \
-            --set-env-vars='CHANNELS_TELEGRAM_TOKEN=$CHANNELS_TELEGRAM_TOKEN' \
-            --set-env-vars='^##^DIALOGFLOW=$DIALOGFLOW' \
-            --set-env-vars='SENTRY_DSN=$SENTRY_DSN' \
-            --set-env-vars='SPRING_DATA_MONGODB_URI=$SPRING_DATA_MONGODB_URI' \
-            --set-env-vars='BPL_JVM_THREAD_COUNT=$BPL_JVM_THREAD_COUNT' \
-            --set-env-vars='BPL_JVM_LOADED_CLASS_COUNT=$BPL_JVM_LOADED_CLASS_COUNT' \
-            --set-env-vars='BPL_JVM_HEAD_ROOM=$BPL_JVM_HEAD_ROOM'
+        run: gcloud run deploy dutch-treat --image gcr.io/dutchtreaten-ixex/dutch-treat --platform managed --region=asia-northeast1 
       
 #       - name: push image to heroku registry
 #         run: docker tag de1m0s/dutch-treat:${{ github.run_number }} registry.heroku.com/dutch-treat/web && docker push registry.heroku.com/dutch-treat/web
