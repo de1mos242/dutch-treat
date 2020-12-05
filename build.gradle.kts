@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.transformers.PropertiesFileTransformer
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -7,7 +6,6 @@ plugins {
 	id("io.spring.dependency-management") version "1.0.10.RELEASE"
 	kotlin("jvm") version "1.3.72"
 	kotlin("plugin.spring") version "1.3.72"
-	id("com.justai.jaicf.jaicp-build-plugin") version "0.1.1"
 }
 
 group = "net.de1mos"
@@ -78,25 +76,4 @@ tasks.withType<KotlinCompile> {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "1.8"
     }
-}
-
-tasks.create("stage") {
-    dependsOn("shadowJar")
-}
-
-tasks.withType<com.justai.jaicf.plugins.jaicp.build.JaicpBuild> {
-    mainClassName.set(application.mainClassName)
-}
-
-tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-    isZip64 = true
-    // Required for Spring
-    mergeServiceFiles()
-    append("META-INF/spring.handlers")
-    append("META-INF/spring.schemas")
-    append("META-INF/spring.tooling")
-    transform(PropertiesFileTransformer().apply {
-        paths = listOf("META-INF/spring.factories")
-        mergeStrategy = "append"
-    })
 }
