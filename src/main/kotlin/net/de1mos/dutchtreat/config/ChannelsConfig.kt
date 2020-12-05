@@ -23,7 +23,9 @@ class ChannelsConfig(private val channelProperties: ChannelProperties,
         return TelegramChannelCustomImpl(bot, channelProperties.telegram.token).also {
             it.startCheckingUpdates()
         }.also {
-            registerWebhook()
+            if (channelProperties.telegram.webhook.isNotEmpty()) {
+                registerWebhook()
+            }
         }
     }
 
