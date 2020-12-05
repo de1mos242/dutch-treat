@@ -6,3 +6,6 @@ class TransferNotFoundException(val position: Int) : RuntimeException()
 class NoPurchasesException : RuntimeException()
 class EventNotFoundException(val eventName: String) : RuntimeException()
 class InvitationCodeNotFoundException : RuntimeException()
+
+class SetWebhookFailedException(val responseCode: Int, val responseText: String?): RuntimeException()
+

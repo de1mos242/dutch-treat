@@ -13,6 +13,8 @@ spring:
 channels:
   telegram:
     token: change it
+    webhook: webhook_url
 
 sentry:
   dsn:
+
