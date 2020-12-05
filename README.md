@@ -3,6 +3,9 @@ Dutch treat app
 
 # What's new:
 
+## 0.0.6-SNAPSHOT
+1. Moved to Google Cloud Run
+
 ## 0.0.5-SNAPSHOT
 1. Add Sentry integration
 
