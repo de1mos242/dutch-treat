@@ -42,9 +42,9 @@ import com.justai.jaicf.context.RequestContext
 import com.justai.jaicf.helpers.kotlin.PropertyWithBackingField
 
 class TelegramChannelCustomImpl(
-        override val botApi: BotApi,
-        private val telegramBotToken: String,
-        private val telegramApiUrl: String = "https://api.telegram.org/"
+    override val botApi: BotApi,
+    private val telegramBotToken: String,
+    private val telegramApiUrl: String = "https://api.telegram.org/"
 ) : HttpBotChannel {
 
     private val gson = Gson()
@@ -63,97 +63,96 @@ class TelegramChannelCustomImpl(
     }
 
     val dispatchHandlers = listOf(
-            TextHandler { _, update ->
-                update.message?.let {
-                    process(TelegramTextRequest(it), update)
-                }
-            },
-
-            CallbackQueryHandler { _, update ->
-                update.callbackQuery?.let {
-                    process(TelegramQueryRequest(it.message!!, it.data), update)
-                }
-            },
-
-            LocationHandler { _, update, location ->
-                update.message?.let {
-                    process(TelegramLocationRequest(it, location), update)
-                }
-            },
-
-            ContactHandler { _, update, contact ->
-                update.message?.let {
-                    process(TelegramContactRequest(it, contact), update)
-                }
-            },
-
-            AudioHandler { _, update, audio ->
-                update.message?.let {
-                    process(TelegramAudioRequest(it, audio), update)
-                }
-            },
-
-            DocumentHandler { _, update, document ->
-                update.message?.let {
-                    process(TelegramDocumentRequest(it, document), update)
-                }
-            },
-
-            AnimationHandler { _, update, animation ->
-                update.message?.let {
-                    process(TelegramAnimationRequest(it, animation), update)
-                }
-            },
-
-            GameHandler { _, update, game ->
-                update.message?.let {
-                    process(TelegramGameRequest(it, game), update)
-                }
-            },
-
-            PhotosHandler { _, update, list ->
-                update.message?.let {
-                    process(TelegramPhotosRequest(it, list), update)
-                }
-            },
-
-            StickerHandler { _, update, sticker ->
-                update.message?.let {
-                    process(TelegramStickerRequest(it, sticker), update)
-                }
-            },
-
-            VideoHandler { _, update, video ->
-                update.message?.let {
-                    process(TelegramVideoRequest(it, video), update)
-                }
-            },
-
-            VideoNoteHandler { _, update, videoNote ->
-                update.message?.let {
-                    process(TelegramVideoNoteRequest(it, videoNote), update)
-                }
-            },
-
-            VoiceHandler { _, update, voice ->
-                update.message?.let {
-                    process(TelegramVoiceRequest(it, voice), update)
-                }
+        TextHandler { _, update ->
+            update.message?.let {
+                process(TelegramTextRequest(it), update)
             }
+        },
+
+        CallbackQueryHandler { _, update ->
+            update.callbackQuery?.let {
+                process(TelegramQueryRequest(it.message!!, it.data), update)
+            }
+        },
+
+        LocationHandler { _, update, location ->
+            update.message?.let {
+                process(TelegramLocationRequest(it, location), update)
+            }
+        },
+
+        ContactHandler { _, update, contact ->
+            update.message?.let {
+                process(TelegramContactRequest(it, contact), update)
+            }
+        },
+
+        AudioHandler { _, update, audio ->
+            update.message?.let {
+                process(TelegramAudioRequest(it, audio), update)
+            }
+        },
+
+        DocumentHandler { _, update, document ->
+            update.message?.let {
+                process(TelegramDocumentRequest(it, document), update)
+            }
+        },
+
+        AnimationHandler { _, update, animation ->
+            update.message?.let {
+                process(TelegramAnimationRequest(it, animation), update)
+            }
+        },
+
+        GameHandler { _, update, game ->
+            update.message?.let {
+                process(TelegramGameRequest(it, game), update)
+            }
+        },
+
+        PhotosHandler { _, update, list ->
+            update.message?.let {
+                process(TelegramPhotosRequest(it, list), update)
+            }
+        },
+
+        StickerHandler { _, update, sticker ->
+            update.message?.let {
+                process(TelegramStickerRequest(it, sticker), update)
+            }
+        },
+
+        VideoHandler { _, update, video ->
+            update.message?.let {
+                process(TelegramVideoRequest(it, video), update)
+            }
+        },
+
+        VideoNoteHandler { _, update, videoNote ->
+            update.message?.let {
+                process(TelegramVideoNoteRequest(it, videoNote), update)
+            }
+        },
+
+        VoiceHandler { _, update, voice ->
+            update.message?.let {
+                process(TelegramVoiceRequest(it, voice), update)
+            }
+        }
     )
 
     override fun process(request: HttpBotRequest): HttpBotResponse {
         val update = gson.fromJson(request.receiveText(), Update::class.java)
         update.httpBotRequest = request
 
-        return process(update)
+        return process(update).asJsonHttpBotResponse()
     }
 
-    fun process(update: Update): HttpBotResponse {
+    fun process(update: Update): String {
         dispatchHandlers.filter { it.checkUpdate(update) }
-                .forEach { it.handlerCallback(bot, update) }
-
-        return "Ok".asJsonHttpBotResponse()
+            .forEach { it.handlerCallback(bot, update) }
+        return "Ok"
     }
 
 }

@@ -38,15 +38,12 @@ springBoot {
 	buildInfo()
 }
 
-configurations {
-	compile.get().exclude("org.springframework.boot", "spring-boot-starter-tomcat")
-}
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("org.springframework.boot:spring-boot-starter-jetty")
-    implementation("io.sentry:sentry-spring-boot-starter:3.2.0")
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.projectreactor:reactor-spring:1.0.1.RELEASE")
+	implementation("io.sentry:sentry-spring-boot-starter:3.2.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
