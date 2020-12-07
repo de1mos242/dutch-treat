@@ -23,7 +23,7 @@ class EventService(val eventRepository: EventRepository) {
 
     fun createEvent(eventName: String): Event {
         val event = Event(UUID.randomUUID().toString(), eventName, LocalDateTime.now(ZoneOffset.UTC))
-        eventRepository.save(event)
+        eventRepository.save(event).block()
         return event
     }
 
@@ -34,7 +34,7 @@ class EventService(val eventRepository: EventRepository) {
         val newParticipants = event.participants?.toMutableList() ?: ArrayList()
         newParticipants.add(Participant(UUID.randomUUID().toString(), participantName))
         val newEvent = event.copy(participants = newParticipants)
-        eventRepository.save(newEvent)
+        eventRepository.save(newEvent).block()
     }
 
     fun getParticipants(event: Event): List<String> {
@@ -53,14 +53,14 @@ class EventService(val eventRepository: EventRepository) {
         val purchase = Purchase(UUID.randomUUID().toString(), p.id, description, amount)
         val newPurchases = event.purchases?.toMutableList() ?: ArrayList()
         newPurchases.add(purchase)
-        eventRepository.save(event.copy(purchases = newPurchases))
+        eventRepository.save(event.copy(purchases = newPurchases)).block()
         return PurchaseDto(buyerName, amount, description, emptyList())
     }
 
     fun removePurchase(event: Event, purchaseNumber: Int): PurchaseDto {
         val purchase = findPurchase(event, purchaseNumber - 1)
         val newPurchases = event.purchases!!.filter { it.id != purchase.id }
-        eventRepository.save(event.copy(purchases = newPurchases))
+        eventRepository.save(event.copy(purchases = newPurchases)).block()
         return toDto(event, purchase, event.participants)
     }
 
@@ -82,7 +82,7 @@ class EventService(val eventRepository: EventRepository) {
         val newPurchase = purchase.copy(consumerIds = newConsumers)
         val newPurchases = event.purchases!!.toMutableList()
         newPurchases[purchaseIndex] = newPurchase
-        eventRepository.save(event.copy(purchases = newPurchases))
+        eventRepository.save(event.copy(purchases = newPurchases)).block()
         return toDto(event, purchase, event.participants)
     }
 
@@ -114,14 +114,14 @@ class EventService(val eventRepository: EventRepository) {
         val newTransfers = event.transfers?.toMutableList() ?: ArrayList()
         val transfer = Transfer(UUID.randomUUID().toString(), sender.id, receiver.id, amount)
         newTransfers.add(transfer)
-        eventRepository.save(event.copy(transfers = newTransfers))
+        eventRepository.save(event.copy(transfers = newTransfers)).block()
         return TransferDto(sender.name, receiver.name, amount)
     }
 
     fun removeTransfer(event: Event, positionNumber: Int): TransferDto {
         val transfer = findTransfer(event, positionNumber - 1)
         val newTransfers = event.transfers!!.filter { it.id != transfer.id }
-        eventRepository.save(event.copy(transfers = newTransfers))
+        eventRepository.save(event.copy(transfers = newTransfers)).block()
         return transferDto(event, transfer)
     }
 

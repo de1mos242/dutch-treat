@@ -1,7 +1,7 @@
 package net.de1mos.dutchtreat.repositories
 
 import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository
 
 data class UserPreferences(
         @Id
@@ -10,4 +10,4 @@ data class UserPreferences(
         val participatedEventIds: List<String>
 )
 
-interface UserPreferencesRepository : MongoRepository<UserPreferences, String>
+interface UserPreferencesRepository : ReactiveMongoRepository<UserPreferences, String>
