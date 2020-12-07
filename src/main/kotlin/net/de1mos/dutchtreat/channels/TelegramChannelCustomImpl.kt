@@ -142,19 +142,20 @@ class TelegramChannelCustomImpl(
             }
     )
 
-    override fun process(request: HttpBotRequest): HttpBotResponse? {
+    override fun process(request: HttpBotRequest): HttpBotResponse {
         val update = gson.fromJson(request.receiveText(), Update::class.java)
         update.httpBotRequest = request
 
+        return process(update)
+    }
+
+    fun process(update: Update): HttpBotResponse {
         dispatchHandlers.filter { it.checkUpdate(update) }
                 .forEach { it.handlerCallback(bot, update) }
 
         return "Ok".asJsonHttpBotResponse()
     }
 
-    fun startCheckingUpdates() {
-        botUpdater.startCheckingUpdates()
-    }
 }
 
 internal var Update.httpBotRequest: HttpBotRequest by PropertyWithBackingField {

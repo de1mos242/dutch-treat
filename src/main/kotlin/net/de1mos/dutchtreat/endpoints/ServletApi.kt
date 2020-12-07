@@ -1,21 +1,23 @@
 package net.de1mos.dutchtreat.endpoints
 
-import com.justai.jaicf.channel.http.HttpBotChannelServlet
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.kotlintelegrambot.entities.Update
+import com.google.gson.Gson
 import net.de1mos.dutchtreat.channels.TelegramChannelCustomImpl
-import org.springframework.boot.web.servlet.ServletRegistrationBean
-import org.springframework.context.annotation.Bean
-import org.springframework.stereotype.Component
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
-@Component
-class ServletApi(private val telegramChannel: TelegramChannelCustomImpl) {
+@RestController
+@RequestMapping("/telegram")
+class ServletApi(private val telegramChannel: TelegramChannelCustomImpl, private val objectMapper: ObjectMapper) {
+    private val gson = Gson()
 
-    @Bean
-    fun botServlet(): ServletRegistrationBean<HttpBotChannelServlet> {
-        return ServletRegistrationBean(
-                HttpBotChannelServlet(
-                        telegramChannel
-                ),
-                "/telegram"
-        )
+    @PostMapping
+    fun telegramWebhook(@RequestBody data: Map<String, Any>) {
+        val json = objectMapper.writeValueAsString(data)
+        val update = gson.fromJson(json, Update::class.java)
+        telegramChannel.process(update)
     }
 }
