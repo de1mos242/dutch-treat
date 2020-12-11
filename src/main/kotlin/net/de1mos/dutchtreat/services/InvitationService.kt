@@ -6,6 +6,7 @@ import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.Invitation
 import net.de1mos.dutchtreat.repositories.InvitationRepository
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -19,17 +20,17 @@ class InvitationService(private val invitationRepository: InvitationRepository,
 
     fun invite(event: Event): String {
         val invitation = Invitation(UUID.randomUUID().toString(), UUID.randomUUID().toString(), event.id, LocalDateTime.now(ZoneOffset.UTC))
-        invitationRepository.save(invitation).block()
+        invitationRepository.save(invitation)
         return invitation.code
     }
 
     fun applyInvitation(userId: String, code: String): Event {
-        val invitation = invitationRepository.findByCode(code).block() ?: throw InvitationCodeNotFoundException()
+        val invitation = invitationRepository.findByCode(code) ?: throw InvitationCodeNotFoundException()
 
-        val event = eventRepository.findById(invitation.eventId).block()
+        val event = eventRepository.findByIdOrNull(invitation.eventId)
                 ?: throw EventNotFoundException(invitation.eventId)
         userPreferencesService.updateUserCurrentEvent(userId, event)
-        invitationRepository.deleteById(invitation.id).block()
+        invitationRepository.deleteById(invitation.id)
         return event
     }
 }

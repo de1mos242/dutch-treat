@@ -2,10 +2,9 @@ package net.de1mos.dutchtreat.repositories
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
+import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.data.mongodb.repository.Query
-import org.springframework.data.mongodb.repository.ReactiveMongoRepository
 import org.springframework.stereotype.Repository
-import reactor.core.publisher.Flux
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -25,7 +24,7 @@ data class Event(
 )
 
 @Repository
-interface EventRepository : ReactiveMongoRepository<Event, String> {
+interface EventRepository : MongoRepository<Event, String> {
         @Query(value = "{'id':{\$in: ?0}}", sort = "{'creationTimestamp': 1}")
-        fun findAllByIdOrderByCreationTimestampAsc(ids: Iterable<String>): Flux<Event>
+        fun findAllByIdOrderByCreationTimestampAsc(ids: Iterable<String>): List<Event>
 }

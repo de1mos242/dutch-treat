@@ -5,6 +5,7 @@ import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.UserPreferences
 import net.de1mos.dutchtreat.repositories.UserPreferencesRepository
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 @Service
@@ -13,27 +14,27 @@ class UserPreferencesService(
         val eventRepository: EventRepository
 ) {
     fun updateUserCurrentEvent(userId: String, event: Event) {
-        val preferences = userPreferencesRepository.findById(userId).block()
+        val preferences = userPreferencesRepository.findByIdOrNull(userId)
         if (preferences != null) {
             val newEvents = if (!preferences.participatedEventIds.contains(event.id)) {
                 preferences.participatedEventIds.toMutableList().also { it.add(event.id) }
             } else {
                 preferences.participatedEventIds
             }
-            userPreferencesRepository.save(preferences.copy(lastEventId = event.id, participatedEventIds = newEvents)).block()
+            userPreferencesRepository.save(preferences.copy(lastEventId = event.id, participatedEventIds = newEvents))
         } else {
-            userPreferencesRepository.save(UserPreferences(userId, event.id, listOf(event.id))).block()
+            userPreferencesRepository.save(UserPreferences(userId, event.id, listOf(event.id)))
         }
     }
 
     fun getUserCurrentEvent(userId: String): Event? {
-        val preferences = userPreferencesRepository.findById(userId).block() ?: return null
-        return eventRepository.findById(preferences.lastEventId).block()
+        val preferences = userPreferencesRepository.findByIdOrNull(userId) ?: return null
+        return eventRepository.findByIdOrNull(preferences.lastEventId)
     }
 
     fun getUserEvents(userId: String): List<Event> {
-        val preferences = userPreferencesRepository.findById(userId).block() ?: return emptyList()
-        return eventRepository.findAllByIdOrderByCreationTimestampAsc(preferences.participatedEventIds).collectList().block()!!
+        val preferences = userPreferencesRepository.findByIdOrNull(userId) ?: return emptyList()
+        return eventRepository.findAllByIdOrderByCreationTimestampAsc(preferences.participatedEventIds)
     }
 
     fun switchEvent(userId: String, eventName: String) {
