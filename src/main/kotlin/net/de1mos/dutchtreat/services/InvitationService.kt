@@ -19,17 +19,17 @@ class InvitationService(private val invitationRepository: InvitationRepository,
 
     fun invite(event: Event): String {
         val invitation = Invitation(UUID.randomUUID().toString(), UUID.randomUUID().toString(), event.id, LocalDateTime.now(ZoneOffset.UTC))
-        invitationRepository.save(invitation).block()
+        invitationRepository.save(invitation).toProcessor().block()
         return invitation.code
     }
 
     fun applyInvitation(userId: String, code: String): Event {
-        val invitation = invitationRepository.findByCode(code).block() ?: throw InvitationCodeNotFoundException()
+        val invitation = invitationRepository.findByCode(code).toProcessor().block() ?: throw InvitationCodeNotFoundException()
 
-        val event = eventRepository.findById(invitation.eventId).block()
+        val event = eventRepository.findById(invitation.eventId).toProcessor().block()
                 ?: throw EventNotFoundException(invitation.eventId)
         userPreferencesService.updateUserCurrentEvent(userId, event)
-        invitationRepository.deleteById(invitation.id).block()
+        invitationRepository.deleteById(invitation.id).toProcessor().block()
         return event
     }
 }

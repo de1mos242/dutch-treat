@@ -1,9 +1,6 @@
 package net.de1mos.dutchtreat.jaicf
 
 import com.justai.jaicf.activator.ActivatorFactory
-import com.justai.jaicf.activator.dialogflow.DialogflowAgentConfig
-import com.justai.jaicf.activator.dialogflow.DialogflowConnector
-import com.justai.jaicf.activator.dialogflow.DialogflowIntentActivator
 import com.justai.jaicf.activator.regex.RegexActivator
 import com.justai.jaicf.activator.regex.regex
 import com.justai.jaicf.context.ActionContext
@@ -14,6 +11,9 @@ import net.de1mos.dutchtreat.NoPurchasesException
 import net.de1mos.dutchtreat.ParticipantNotFoundException
 import net.de1mos.dutchtreat.PurchaseNotFoundException
 import net.de1mos.dutchtreat.TransferNotFoundException
+import net.de1mos.dutchtreat.activator.dialogflow.DialogflowAgentConfigCustomImpl
+import net.de1mos.dutchtreat.activator.dialogflow.DialogflowConnectorCustomImpl
+import net.de1mos.dutchtreat.activator.dialogflow.DialogflowIntentActivatorCustomImpl
 import net.de1mos.dutchtreat.config.DialogflowConfig
 import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.services.BalanceService
@@ -32,23 +32,27 @@ class DutchTreatScenario(
         private val balanceService: BalanceService,
         private val invitationService: InvitationService,
         private val buildProperties: BuildProperties,
-        private val dialogflowConfig: DialogflowConfig
+        dialogflowConfig: DialogflowConfig
 ) {
     final val bot: Scenario
     final val activators: Array<ActivatorFactory>
 
     init {
-        val dialogFlowActivatorEn = DialogflowIntentActivator.Factory(
-                DialogflowConnector(DialogflowAgentConfig(
+        val dialogFlowActivatorEn = DialogflowIntentActivatorCustomImpl.Factory(
+            DialogflowConnectorCustomImpl(
+                DialogflowAgentConfigCustomImpl(
                         language = "en",
-                        credentials = dialogflowConfig.credentialsInputStream
-                ))
+                        credentials = dialogflowConfig.credentials
+                )
+            )
         )
-        val dialogFlowActivatorRu = DialogflowIntentActivator.Factory(
-                DialogflowConnector(DialogflowAgentConfig(
+        val dialogFlowActivatorRu = DialogflowIntentActivatorCustomImpl.Factory(
+            DialogflowConnectorCustomImpl(
+                DialogflowAgentConfigCustomImpl(
                         language = "ru",
-                        credentials = dialogflowConfig.credentialsInputStream
-                ))
+                        credentials = dialogflowConfig.credentials
+                )
+            )
         )
         activators = arrayOf(
                 RegexActivator,

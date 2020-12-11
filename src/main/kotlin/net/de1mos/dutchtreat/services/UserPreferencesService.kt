@@ -13,27 +13,27 @@ class UserPreferencesService(
         val eventRepository: EventRepository
 ) {
     fun updateUserCurrentEvent(userId: String, event: Event) {
-        val preferences = userPreferencesRepository.findById(userId).block()
+        val preferences = userPreferencesRepository.findById(userId).toProcessor().block()
         if (preferences != null) {
             val newEvents = if (!preferences.participatedEventIds.contains(event.id)) {
                 preferences.participatedEventIds.toMutableList().also { it.add(event.id) }
             } else {
                 preferences.participatedEventIds
             }
-            userPreferencesRepository.save(preferences.copy(lastEventId = event.id, participatedEventIds = newEvents)).block()
+            userPreferencesRepository.save(preferences.copy(lastEventId = event.id, participatedEventIds = newEvents)).toProcessor().block()
         } else {
-            userPreferencesRepository.save(UserPreferences(userId, event.id, listOf(event.id))).block()
+            userPreferencesRepository.save(UserPreferences(userId, event.id, listOf(event.id))).toProcessor().block()
         }
     }
 
     fun getUserCurrentEvent(userId: String): Event? {
-        val preferences = userPreferencesRepository.findById(userId).block() ?: return null
-        return eventRepository.findById(preferences.lastEventId).block()
+        val preferences = userPreferencesRepository.findById(userId).toProcessor().block() ?: return null
+        return eventRepository.findById(preferences.lastEventId).toProcessor().block()
     }
 
     fun getUserEvents(userId: String): List<Event> {
-        val preferences = userPreferencesRepository.findById(userId).block() ?: return emptyList()
-        return eventRepository.findAllByIdOrderByCreationTimestampAsc(preferences.participatedEventIds).collectList().block()!!
+        val preferences = userPreferencesRepository.findById(userId).toProcessor().block() ?: return emptyList()
+        return eventRepository.findAllByIdOrderByCreationTimestampAsc(preferences.participatedEventIds).collectList().toProcessor().block()!!
     }
 
     fun switchEvent(userId: String, eventName: String) {
