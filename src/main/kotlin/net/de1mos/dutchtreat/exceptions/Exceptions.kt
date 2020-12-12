@@ -1,4 +1,4 @@
-package net.de1mos.dutchtreat
+package net.de1mos.dutchtreat.exceptions
 
 class ParticipantNotFoundException(val name: String) : RuntimeException()
 class PurchaseNotFoundException(val position: Int) : RuntimeException()

@@ -1,21 +1,41 @@
 package net.de1mos.dutchtreat
 
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan
-import org.springframework.boot.runApplication
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import net.de1mos.dutchtreat.config.appModule
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.context.startKoin
 
-@SpringBootApplication
-@ConfigurationPropertiesScan
-class DutchTreatApplication
+class DutchTreatApplication: KoinComponent {
+	val telegramRoute by inject<TelegramRouter>()
 
-object Dev {
-	@JvmStatic
-	fun main(args: Array<String>) {
-		System.setProperty("spring.profiles.active", "local")
-		net.de1mos.dutchtreat.main(args)
+	fun runServer() {
+		val server = embeddedServer(Netty, port = 8080) {
+			routing {
+				telegramRoute.getRoute(this)
+
+				get("/") {
+					call.respondText("Hello World!", ContentType.Text.Plain)
+				}
+				get("/demo") {
+					call.respondText("HELLO WORLD!")
+				}
+			}
+		}
+		server.start(wait = true)
 	}
 }
 
-fun main(args: Array<String>) {
-	runApplication<DutchTreatApplication>(*args)
+fun main() {
+	startKoin {
+		printLogger()
+		modules(appModule)
+	}
+
+	DutchTreatApplication().runServer()
 }

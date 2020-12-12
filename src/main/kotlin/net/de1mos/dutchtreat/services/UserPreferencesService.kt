@@ -1,6 +1,6 @@
 package net.de1mos.dutchtreat.services
 
-import net.de1mos.dutchtreat.EventNotFoundException
+import net.de1mos.dutchtreat.exceptions.EventNotFoundException
 import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.UserPreferences

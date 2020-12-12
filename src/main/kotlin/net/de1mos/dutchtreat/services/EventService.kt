@@ -1,9 +1,9 @@
 package net.de1mos.dutchtreat.services
 
-import net.de1mos.dutchtreat.NoPurchasesException
-import net.de1mos.dutchtreat.ParticipantNotFoundException
-import net.de1mos.dutchtreat.PurchaseNotFoundException
-import net.de1mos.dutchtreat.TransferNotFoundException
+import net.de1mos.dutchtreat.exceptions.NoPurchasesException
+import net.de1mos.dutchtreat.exceptions.ParticipantNotFoundException
+import net.de1mos.dutchtreat.exceptions.PurchaseNotFoundException
+import net.de1mos.dutchtreat.exceptions.TransferNotFoundException
 import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.Participant
