@@ -1,15 +1,26 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+buildscript {
+	repositories {
+		jcenter()
+	}
+	dependencies {
+		classpath("org.koin:koin-gradle-plugin:2.2.1")
+		classpath("com.github.jengelman.gradle.plugins:shadow:2.0.1")
+	}
+}
+apply(plugin = "koin")
+apply(plugin = "com.github.johnrengelman.shadow")
+
 plugins {
-	id("org.springframework.boot") version "2.3.5.RELEASE"
 	application
-	id("io.spring.dependency-management") version "1.0.10.RELEASE"
-	kotlin("jvm") version "1.3.72"
-	kotlin("plugin.spring") version "1.3.72"
+	kotlin("jvm") version "1.4.0"
+	id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
 group = "net.de1mos"
-version = "0.0.6-SNAPSHOT"
+version = "0.0.7-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 configurations {
@@ -17,8 +28,11 @@ configurations {
 		extendsFrom(configurations.annotationProcessor.get())
 	}
 }
+
 val jaicf = "0.9.0"
 val logback = "1.2.3"
+val ktorVersion = "1.4.0"
+val koinVersion = "2.2.1"
 
 // Main class to run application on heroku. Either JaicpPollerKt, or JaicpServerKt. Will propagate to .jar main class.
 application {
@@ -32,23 +46,21 @@ repositories {
 	maven("https://jitpack.io")
 }
 
-extra["testcontainersVersion"] = "1.14.3"
-
-springBoot {
-	buildInfo()
-}
-
-
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
-	implementation("org.projectreactor:reactor-spring:1.0.1.RELEASE")
-	implementation("io.sentry:sentry-spring-boot-starter:3.2.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	testImplementation("org.springframework.boot:spring-boot-starter-test") {
-		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
-	}
+
+	implementation("io.ktor:ktor-server-core:$ktorVersion")
+	implementation("io.ktor:ktor-server-netty:$ktorVersion")
+	implementation("io.ktor:ktor-client-core:$ktorVersion")
+	implementation("org.koin:koin-core:$koinVersion")
+	implementation("io.ktor:ktor-client-cio:$ktorVersion")
+	testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
+	testImplementation("org.koin:koin-test:$koinVersion")
+
+	implementation("org.litote.kmongo:kmongo:4.2.3")
+
+	implementation("io.sentry:sentry:3.2.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
@@ -60,8 +72,6 @@ dependencies {
     implementation("com.justai.jaicf:caila:$jaicf")
     implementation("com.justai.jaicf:telegram:$jaicf")
     implementation("com.justai.jaicf:dialogflow:$jaicf")
-
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 }
 
 tasks.withType<Test> {
@@ -73,4 +83,29 @@ tasks.withType<KotlinCompile> {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "1.8"
     }
+}
+
+kotlin {
+	experimental {
+		coroutines=org.jetbrains.kotlin.gradle.dsl.Coroutines.ENABLE
+	}
+}
+
+
+
+tasks {
+    named<ShadowJar>("shadowJar") {
+        archiveBaseName.set("dutch-treat")
+		archiveVersion.set(null as String?)
+        mergeServiceFiles()
+        manifest {
+            attributes(mapOf("Main-Class" to application.mainClassName))
+        }
+    }
+}
+
+tasks {
+	build {
+		dependsOn(shadowJar)
+	}
 }

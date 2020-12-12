@@ -1,43 +1,21 @@
 package net.de1mos.dutchtreat.config
 
-import com.justai.jaicf.api.BotApi
-import net.de1mos.dutchtreat.channels.TelegramChannelCustomImpl
-import org.springframework.beans.factory.InitializingBean
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
-import org.springframework.util.LinkedMultiValueMap
-import org.springframework.util.MultiValueMap
-import org.springframework.web.reactive.function.BodyInserters
-import org.springframework.web.reactive.function.client.WebClient
+import io.ktor.client.*
+import io.ktor.client.engine.*
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 
-
-@Configuration
 class ChannelsConfig(
     private val channelProperties: ChannelProperties,
-    private val bot: BotApi
-): InitializingBean {
-    @Bean
-    fun telegram(): TelegramChannelCustomImpl {
-        return TelegramChannelCustomImpl(bot, channelProperties.telegram.token)
-    }
-
-    override fun afterPropertiesSet() {
-        if (channelProperties.telegram.webhook.isNotEmpty()) {
-            registerWebhook()
+    private val engine: HttpClientEngine
+) {
+    suspend fun registerWebhook() {
+        val httpClient = HttpClient(engine)
+        httpClient.post<HttpResponse>("https://api.telegram.org/bot${channelProperties.telegram.token}/setWebhook") {
+            body = MultiPartFormDataContent(formData {
+                append("url", channelProperties.telegram.webhook)
+            })
         }
-    }
-
-    private fun registerWebhook() {
-        val body: MultiValueMap<String, String> = LinkedMultiValueMap()
-        body.add("url", channelProperties.telegram.webhook)
-
-        val request = WebClient.create("https://api.telegram.org")
-            .post()
-            .uri("/bot${channelProperties.telegram.token}/setWebhook")
-            .body(BodyInserters.fromFormData(body))
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE)
-        request.exchange().block()?.bodyToMono(String::class.java)?.block()
     }
 }

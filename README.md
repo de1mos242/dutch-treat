@@ -3,6 +3,9 @@ Dutch treat app
 
 # What's new:
 
+## 0.0.7
+1. Moved to ktor + koin (#15)
+
 ## 0.0.6-SNAPSHOT
 1. Moved to Google Cloud Run
 
@@ -22,3 +25,7 @@ Dutch treat app
 
 ## 0.0.1-SNAPSHOT
 Initial version. See help for available commands.
+
+# Local development
+Copy /src/main/resources/koin.properties to /src/main/resources/koin-local.properties and fill properties with real values
+Run `./gradlew run -i --args='/koin-local.properties'`
