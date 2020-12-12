@@ -5,13 +5,10 @@ import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.UserPreferences
 import net.de1mos.dutchtreat.repositories.UserPreferencesRepository
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.stereotype.Service
 
-@Service
 class UserPreferencesService(
-        val userPreferencesRepository: UserPreferencesRepository,
-        val eventRepository: EventRepository
+    val userPreferencesRepository: UserPreferencesRepository,
+    val eventRepository: EventRepository
 ) {
     fun updateUserCurrentEvent(userId: String, event: Event) {
         val preferences = userPreferencesRepository.findByIdOrNull(userId)
@@ -38,7 +35,8 @@ class UserPreferencesService(
     }
 
     fun switchEvent(userId: String, eventName: String) {
-        val event = getUserEvents(userId).find { it.name.equals(eventName, true) } ?: throw EventNotFoundException(eventName)
+        val event =
+            getUserEvents(userId).find { it.name.equals(eventName, true) } ?: throw EventNotFoundException(eventName)
         updateUserCurrentEvent(userId, event)
     }
 }

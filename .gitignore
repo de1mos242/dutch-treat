@@ -3,4 +3,4 @@ target
 .gradle
 build
 
-application-local.yml
+koin-local.properties

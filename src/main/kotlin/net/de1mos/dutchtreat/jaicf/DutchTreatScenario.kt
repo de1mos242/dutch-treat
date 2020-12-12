@@ -3,6 +3,7 @@ package net.de1mos.dutchtreat.jaicf
 import com.justai.jaicf.activator.regex.regex
 import com.justai.jaicf.context.ActionContext
 import com.justai.jaicf.model.scenario.Scenario
+import net.de1mos.dutchtreat.config.AppInfoConfig
 import net.de1mos.dutchtreat.exceptions.EventNotFoundException
 import net.de1mos.dutchtreat.exceptions.InvitationCodeNotFoundException
 import net.de1mos.dutchtreat.exceptions.NoPurchasesException
@@ -14,18 +15,15 @@ import net.de1mos.dutchtreat.services.BalanceService
 import net.de1mos.dutchtreat.services.EventService
 import net.de1mos.dutchtreat.services.InvitationService
 import net.de1mos.dutchtreat.services.UserPreferencesService
-import org.springframework.boot.info.BuildProperties
-import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
-@Service
 class DutchTreatScenario(
     private val eventService: EventService,
     private val userPreferencesService: UserPreferencesService,
     private val balanceService: BalanceService,
     private val invitationService: InvitationService,
-    private val buildProperties: BuildProperties
+    private val appInfoConfig: AppInfoConfig
 ) {
     fun getBot(): Scenario {
         return bot
@@ -52,7 +50,7 @@ class DutchTreatScenario(
 
             state("version") {
                 globalActivators { regex("version") }
-                action { reactions.say(buildProperties.version) }
+                action { reactions.say(appInfoConfig.version) }
             }
 
             state("help") {
@@ -341,14 +339,14 @@ class DutchTreatScenario(
                 action {
                     val e = getUserEvent() ?: return@action
                     val balance = balanceService.calculateBalance(e)
-                    reactions.say("Current balance\n" + balance.map {
+                    reactions.say("Current balance\n" + balance.joinToString("\n") {
                         when (it.balance.compareTo(BigDecimal.ZERO)) {
                             -1 -> "${it.participantName} should give ${it.balance.abs().toPrettyString()}"
                             0 -> "${it.participantName} owes nobody and nobody owes him or her"
                             1 -> "${it.participantName} should get ${it.balance.toPrettyString()}"
                             else -> throw IllegalStateException(it.balance.toPrettyString())
                         }
-                    }.joinToString("\n"))
+                    })
                 }
             }
 
@@ -357,33 +355,34 @@ class DutchTreatScenario(
             }
         }
     }
-}
 
-private fun ActionContext.getValFromRegex(group: String = "val") = activator.regex?.group(group)!!.trim()
-private fun ActionContext.getSafeValFromRegex(group: String = "val") = activator.regex?.matcher?.group(group)?.trim()
-private fun ActionContext.getUserEvent(): Event? {
-    val e = userPreferencesService.getUserCurrentEvent(context.clientId)
-    if (e == null) {
-        reactions.say("There is no current event, but you can create a new one")
-        return null
+    private fun ActionContext.getValFromRegex(group: String = "val") = activator.regex?.group(group)!!.trim()
+    private fun ActionContext.getSafeValFromRegex(group: String = "val") =
+        activator.regex?.matcher?.group(group)?.trim()
+
+    private fun ActionContext.getUserEvent(): Event? {
+        val e = userPreferencesService.getUserCurrentEvent(context.clientId)
+        if (e == null) {
+            reactions.say("There is no current event, but you can create a new one")
+            return null
+        }
+        return e
     }
-    return e
-}
 
-private fun ActionContext.toBigDecimal(str: String): BigDecimal? {
-    return try {
-        BigDecimal(str)
-    } catch (e: NumberFormatException) {
-        reactions.say("Can't recognize $str as amount of money")
-        null
+    private fun ActionContext.toBigDecimal(str: String): BigDecimal? {
+        return try {
+            BigDecimal(str)
+        } catch (e: NumberFormatException) {
+            reactions.say("Can't recognize $str as amount of money")
+            null
+        }
     }
-}
 
-private fun BigDecimal.toPrettyString(): String {
-    return DecimalFormat("0.00").format(this)
-}
+    private fun BigDecimal.toPrettyString(): String {
+        return DecimalFormat("0.00").format(this).replace(".", ",")
+    }
 
-private fun EventService.TransferDto.toPrettyString(): String {
-    return "${this.senderName} gave ${this.receiverName} ${this.amount.toPrettyString()}"
-}
+    private fun EventService.TransferDto.toPrettyString(): String {
+        return "${this.senderName} gave ${this.receiverName} ${this.amount.toPrettyString()}"
+    }
 }

@@ -58,7 +58,11 @@ jobs:
         run: echo "$DOCKER_TOKEN" | docker login -u _json_key --password-stdin https://gcr.io
       
       - name: Build image
-        run: ./gradlew bootBuildImage --imageName=gcr.io/dutchtreaten-ixex/dutch-treat
+        env:
+          MONGO_URL: ${{ secrets.MONGO_URL }}
+          MONGO_DATABASE: ${{ secrets.MONGO_DATABASE }}
+          DIALOGFLOW: ${{ secrets.DIALOGFLOW }}
+        run: docker build -t gcr.io/dutchtreaten-ixex/dutch-treat  --build-arg MONGO_URL="$MONGO_URL" --build-arg MONGO_DATABASE="$MONGO_DATABASE" --build-arg DIALOGFLOW="$DIALOGFLOW" .
 
 #       - name: login to docker hub
 #         env:

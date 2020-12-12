@@ -1,30 +1,54 @@
 package net.de1mos.dutchtreat.repositories
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.mapping.Document
-import org.springframework.data.mongodb.repository.MongoRepository
-import org.springframework.data.mongodb.repository.Query
-import org.springframework.stereotype.Repository
+import com.mongodb.client.MongoDatabase
+import org.bson.codecs.pojo.annotations.BsonId
+import org.litote.kmongo.`in`
+import org.litote.kmongo.ascending
+import org.litote.kmongo.eq
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
+import org.litote.kmongo.save
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
 data class Participant(val id: String, val name: String)
-data class Purchase(val id: String, val buyerId: String, val description: String, val amount: BigDecimal, val consumerIds: List<String>? = null)
-data class Transfer(val id: String, val senderId: String, val receiverId: String, val amount: BigDecimal)
-
-@Document(collection = "events")
-data class Event(
-        @Id
-        val id: String,
-        val name: String,
-        val creationTimestamp: LocalDateTime,
-        val participants: List<Participant>? = null,
-        val purchases: List<Purchase>? = null,
-        val transfers: List<Transfer>? = null
+data class Purchase(
+    val id: String,
+    val buyerId: String,
+    val description: String,
+    val amount: BigDecimal,
+    val consumerIds: List<String>? = null
 )
 
-@Repository
-interface EventRepository : MongoRepository<Event, String> {
-        @Query(value = "{'id':{\$in: ?0}}", sort = "{'creationTimestamp': 1}")
-        fun findAllByIdOrderByCreationTimestampAsc(ids: Iterable<String>): List<Event>
+data class Transfer(val id: String, val senderId: String, val receiverId: String, val amount: BigDecimal)
+
+data class Event(
+    @BsonId val id: String,
+    val name: String,
+    val creationTimestamp: LocalDateTime,
+    val participants: List<Participant>? = null,
+    val purchases: List<Purchase>? = null,
+    val transfers: List<Transfer>? = null
+)
+
+interface EventRepository {
+    fun findAllByIdOrderByCreationTimestampAsc(ids: Iterable<String>): List<Event>
+    fun findByIdOrNull(id: String): Event?
+    fun save(event: Event)
+}
+
+class EventRepositoryImpl(mongo: MongoDatabase) : EventRepository {
+    private val col = mongo.getCollection<Event>("events")
+
+    override fun findAllByIdOrderByCreationTimestampAsc(ids: Iterable<String>): List<Event> {
+        return col.find(Event::id `in` ids).sort(ascending(Event::creationTimestamp)).toList()
+    }
+
+    override fun findByIdOrNull(id: String): Event? {
+        return col.findOne { Event::id eq id }
+    }
+
+    override fun save(event: Event) {
+        col.save(event)
+    }
 }

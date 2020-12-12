@@ -6,13 +6,10 @@ import net.de1mos.dutchtreat.repositories.Event
 import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.Invitation
 import net.de1mos.dutchtreat.repositories.InvitationRepository
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
 
-@Service
 class InvitationService(private val invitationRepository: InvitationRepository,
                         private val eventRepository: EventRepository,
                         private val userPreferencesService: UserPreferencesService

@@ -4,29 +4,42 @@ import com.justai.jaicf.BotEngine
 import com.justai.jaicf.context.manager.InMemoryBotContextManager
 import com.justai.jaicf.reactions.text
 import com.justai.jaicf.test.BotTest
+import net.de1mos.dutchtreat.config.ActivatorsConfig
+import net.de1mos.dutchtreat.config.AppInfoConfig
+import net.de1mos.dutchtreat.config.appModule
 import net.de1mos.dutchtreat.jaicf.DutchTreatScenario
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.info.BuildProperties
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
+import org.koin.core.context.startKoin
+import org.koin.test.KoinTest
+import org.koin.test.inject
 import java.util.*
 
-@SpringBootTest
-@ActiveProfiles("local")
-class DutchTreatScenarioTest {
+class DutchTreatScenarioTest : KoinTest {
 
-    @Autowired
-    lateinit var scenario: DutchTreatScenario
-    @Autowired
-    lateinit var buildProperties: BuildProperties
+    private val scenario: DutchTreatScenario by inject()
+    private val activatorsConfig: ActivatorsConfig by inject()
+    private val appInfoConfig: AppInfoConfig by inject()
     lateinit var helper: BotTest
+
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        internal fun allInit() {
+            startKoin {
+                fileProperties("/koin-local.properties")
+                environmentProperties()
+                modules(appModule)
+            }
+        }
+    }
 
     @BeforeEach
     fun init() {
-        helper = BotTest(BotEngine(scenario.bot.model, InMemoryBotContextManager, scenario.activators))
+        helper =
+            BotTest(BotEngine(scenario.getBot().model, InMemoryBotContextManager, activatorsConfig.getActivators()))
         helper.init()
     }
 
@@ -43,26 +56,39 @@ class DutchTreatScenarioTest {
 
     @Test
     fun `handle help`() {
-        Assertions.assertTrue(helper.query("help").reactions.text?.response?.text?.startsWith("You can send me these common commands")
-                ?: false)
-        Assertions.assertTrue(helper.query("what you can do?").reactions.text?.response?.text?.startsWith("You can send me these common commands")
-                ?: false)
-        Assertions.assertTrue(helper.query("что ты умеешь").reactions.text?.response?.text?.startsWith("You can send me these common commands")
-                ?: false)
+        Assertions.assertTrue(
+            helper.query("help").reactions.text?.response?.text?.startsWith("You can send me these common commands")
+                ?: false
+        )
+        Assertions.assertTrue(
+            helper.query("what you can do?").reactions.text?.response?.text?.startsWith("You can send me these common commands")
+                ?: false
+        )
+        Assertions.assertTrue(
+            helper.query("что ты умеешь").reactions.text?.response?.text?.startsWith("You can send me these common commands")
+                ?: false
+        )
     }
+
     @Test
     fun `handle full help`() {
-        Assertions.assertTrue(helper.query("full help").reactions.text?.response?.text?.startsWith("You can send me these commands")
-                ?: false)
-        Assertions.assertTrue(helper.query("show all commands").reactions.text?.response?.text?.startsWith("You can send me these commands")
-                ?: false)
-        Assertions.assertTrue(helper.query("покажи весь список").reactions.text?.response?.text?.startsWith("You can send me these commands")
-                ?: false)
+        Assertions.assertTrue(
+            helper.query("full help").reactions.text?.response?.text?.startsWith("You can send me these commands")
+                ?: false
+        )
+        Assertions.assertTrue(
+            helper.query("show all commands").reactions.text?.response?.text?.startsWith("You can send me these commands")
+                ?: false
+        )
+        Assertions.assertTrue(
+            helper.query("покажи весь список").reactions.text?.response?.text?.startsWith("You can send me these commands")
+                ?: false
+        )
     }
 
     @Test
     fun `handle version`() {
-        helper.query("version") responds buildProperties.version
+        helper.query("version") responds appInfoConfig.version
     }
 
     @Test
@@ -276,7 +302,8 @@ class DutchTreatScenarioTest {
 
         helper.withClientId(user1)
         val invitation = helper.query("invite user").reactions.text?.response?.text!!
-        val regex = "Send this code to user: ([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})".toRegex()
+        val regex =
+            "Send this code to user: ([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})".toRegex()
         Assertions.assertTrue(regex.matches(invitation))
         val code = regex.find(invitation)?.groups?.get(1)!!.value
 
@@ -324,7 +351,8 @@ class DutchTreatScenarioTest {
         """.trimIndent()
 
         val invitation = helper.query("invite user").reactions.text?.response?.text!!
-        val regex = "Send this code to user: ([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})".toRegex()
+        val regex =
+            "Send this code to user: ([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})".toRegex()
         Assertions.assertTrue(regex.matches(invitation))
         val code = regex.find(invitation)?.groups?.get(1)!!.value
 

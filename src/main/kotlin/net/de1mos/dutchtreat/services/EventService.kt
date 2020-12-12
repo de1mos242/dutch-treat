@@ -9,14 +9,12 @@ import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.Participant
 import net.de1mos.dutchtreat.repositories.Purchase
 import net.de1mos.dutchtreat.repositories.Transfer
-import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
 import kotlin.collections.ArrayList
 
-@Service
 class EventService(val eventRepository: EventRepository) {
     data class PurchaseDto(val buyerName: String, val amount: BigDecimal, val description: String, val consumers: List<String>)
     data class TransferDto(val senderName: String, val receiverName: String, val amount: BigDecimal)
