@@ -3,6 +3,7 @@ package net.de1mos.dutchtreat.jaicf
 import com.justai.jaicf.activator.regex.regex
 import com.justai.jaicf.context.ActionContext
 import com.justai.jaicf.model.scenario.Scenario
+import io.sentry.Sentry
 import net.de1mos.dutchtreat.config.AppInfoConfig
 import net.de1mos.dutchtreat.exceptions.EventNotFoundException
 import net.de1mos.dutchtreat.exceptions.InvitationCodeNotFoundException
@@ -37,20 +38,22 @@ class DutchTreatScenario(
                     regex("/start")
                 }
                 action {
-                    reactions.say(
-                        """
+                    wrapSentry {
+                        reactions.say(
+                            """
                             Hello, this is a Dutch Treat bot!
                             I'm here to help you with party events.
                             You can start with creating event just say "start event %event_name%".
                             To see the list of available commands just send "help".
                         """.trimIndent()
-                    )
+                        )
+                    }
                 }
             }
 
             state("version") {
                 globalActivators { regex("version") }
-                action { reactions.say(appInfoConfig.version) }
+                action { wrapSentry { reactions.say(appInfoConfig.version) } }
             }
 
             state("help") {
@@ -59,8 +62,9 @@ class DutchTreatScenario(
                     intent("help")
                 }
                 action {
-                    reactions.say(
-                        """
+                    wrapSentry {
+                        reactions.say(
+                            """
                         You can send me these common commands:
                         start event %Event name%
                         add participant %Participant name%
@@ -69,7 +73,8 @@ class DutchTreatScenario(
                         get balance - show current event balance between participants
                         full help - to see all available commands
                     """.trimIndent()
-                    )
+                        )
+                    }
                 }
             }
 
@@ -79,8 +84,9 @@ class DutchTreatScenario(
                     intent("full help")
                 }
                 action {
-                    reactions.say(
-                        """
+                    wrapSentry {
+                        reactions.say(
+                            """
                         You can send me these commands:
                         -- Events
                         start event %Event name%
@@ -111,37 +117,44 @@ class DutchTreatScenario(
                         -- Balance
                         get balance - show current event balance between participants
                     """.trimIndent()
-                    )
+                        )
+                    }
                 }
             }
 
             state("create event") {
                 globalActivators { regex("start event (?<val>.+)") }
                 action {
-                    val eventName = getValFromRegex()
-                    val e = eventService.createEvent(eventName)
-                    userPreferencesService.updateUserCurrentEvent(context.clientId, e)
-                    reactions.say("Great, you created an event '${e.name}'")
+                    wrapSentry {
+                        val eventName = getValFromRegex()
+                        val e = eventService.createEvent(eventName)
+                        userPreferencesService.updateUserCurrentEvent(context.clientId, e)
+                        reactions.say("Great, you created an event '${e.name}'")
+                    }
                 }
             }
 
             state("get current event") {
                 globalActivators { regex("get current event") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    reactions.say("Current event is: ${e.name}")
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        reactions.say("Current event is: ${e.name}")
+                    }
                 }
             }
 
             state("show events") {
                 globalActivators { regex("show events") }
                 action {
-                    val events = userPreferencesService.getUserEvents(context.clientId)
-                    if (events.isEmpty()) {
-                        reactions.say("There are no events yet, try to start a new one")
-                    } else {
-                        reactions.say("Your events:\n" + events.mapIndexed { index, event -> "${index + 1}. ${event.name}" }
-                            .joinToString("\n"))
+                    wrapSentry {
+                        val events = userPreferencesService.getUserEvents(context.clientId)
+                        if (events.isEmpty()) {
+                            reactions.say("There are no events yet, try to start a new one")
+                        } else {
+                            reactions.say("Your events:\n" + events.mapIndexed { index, event -> "${index + 1}. ${event.name}" }
+                                .joinToString("\n"))
+                        }
                     }
                 }
             }
@@ -149,12 +162,14 @@ class DutchTreatScenario(
             state("switch to event") {
                 globalActivators { regex("switch to event (?<event>.+)") }
                 action {
-                    val eventName = getValFromRegex("event")
-                    try {
-                        userPreferencesService.switchEvent(context.clientId, eventName)
-                        reactions.say("Switched to event $eventName")
-                    } catch (e: EventNotFoundException) {
-                        reactions.say("There is no event ${e.eventName}, but you could start it")
+                    wrapSentry {
+                        val eventName = getValFromRegex("event")
+                        try {
+                            userPreferencesService.switchEvent(context.clientId, eventName)
+                            reactions.say("Switched to event $eventName")
+                        } catch (e: EventNotFoundException) {
+                            reactions.say("There is no event ${e.eventName}, but you could start it")
+                        }
                     }
                 }
             }
@@ -162,23 +177,27 @@ class DutchTreatScenario(
             state("invite user") {
                 globalActivators { regex("invite user") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val code = invitationService.invite(e)
-                    reactions.say("Send this code to user: $code")
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val code = invitationService.invite(e)
+                        reactions.say("Send this code to user: $code")
+                    }
                 }
             }
 
             state("activate invitation code") {
                 globalActivators { regex("activate (?<val>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}).*") }
                 action {
-                    val code = getValFromRegex()
-                    try {
-                        val event = invitationService.applyInvitation(context.clientId, code)
-                        reactions.say("You were successfully added to event ${event.name}")
-                    } catch (e: InvitationCodeNotFoundException) {
-                        reactions.say("Invitation code not found")
-                    } catch (e: EventNotFoundException) {
-                        reactions.say("event is gone...")
+                    wrapSentry {
+                        val code = getValFromRegex()
+                        try {
+                            val event = invitationService.applyInvitation(context.clientId, code)
+                            reactions.say("You were successfully added to event ${event.name}")
+                        } catch (e: InvitationCodeNotFoundException) {
+                            reactions.say("Invitation code not found")
+                        } catch (e: EventNotFoundException) {
+                            reactions.say("event is gone...")
+                        }
                     }
                 }
             }
@@ -186,22 +205,26 @@ class DutchTreatScenario(
             state("add participant") {
                 globalActivators { regex("add participant (?<val>.+)") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val name = getValFromRegex()
-                    eventService.addParticipant(e, name)
-                    reactions.say("Great, you added $name to your event")
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val name = getValFromRegex()
+                        eventService.addParticipant(e, name)
+                        reactions.say("Great, you added $name to your event")
+                    }
                 }
             }
 
             state("get participants") {
                 globalActivators { regex("Get participants") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val participants = eventService.getParticipants(e)
-                    if (participants.isEmpty()) {
-                        reactions.say("There are no participants yet, add someone")
-                    } else {
-                        reactions.say("Participants: ${participants.joinToString(", ")}")
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val participants = eventService.getParticipants(e)
+                        if (participants.isEmpty()) {
+                            reactions.say("There are no participants yet, add someone")
+                        } else {
+                            reactions.say("Participants: ${participants.joinToString(", ")}")
+                        }
                     }
                 }
             }
@@ -209,16 +232,18 @@ class DutchTreatScenario(
             state("add purchase") {
                 globalActivators { regex("(?<buyer>.+) bought (?<desc>.+) for (?<cost>[\\d\\.]+).*") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val participantName = getValFromRegex("buyer")
-                    val description = getValFromRegex("desc")
-                    val cost = toBigDecimal(getValFromRegex("cost")) ?: return@action
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val participantName = getValFromRegex("buyer")
+                        val description = getValFromRegex("desc")
+                        val cost = toBigDecimal(getValFromRegex("cost")) ?: return@wrapSentry
 
-                    try {
-                        val p = eventService.addPurchase(e, participantName, description, cost)
-                        reactions.say("Great, added $participantName purchase for ${p.amount.toPrettyString()}")
-                    } catch (e: ParticipantNotFoundException) {
-                        reactions.say("There is no participant with name ${e.name}, add him or her before")
+                        try {
+                            val p = eventService.addPurchase(e, participantName, description, cost)
+                            reactions.say("Great, added $participantName purchase for ${p.amount.toPrettyString()}")
+                        } catch (e: ParticipantNotFoundException) {
+                            reactions.say("There is no participant with name ${e.name}, add him or her before")
+                        }
                     }
                 }
             }
@@ -226,13 +251,15 @@ class DutchTreatScenario(
             state("remove purchase") {
                 globalActivators { regex("Remove purchase (?<position>[\\d]+).*") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val position = getValFromRegex("position").toInt()
-                    try {
-                        val p = eventService.removePurchase(e, position)
-                        reactions.say("Purchase ${p.description} removed")
-                    } catch (e: PurchaseNotFoundException) {
-                        reactions.say("Purchase with position ${e.position} not found")
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val position = getValFromRegex("position").toInt()
+                        try {
+                            val p = eventService.removePurchase(e, position)
+                            reactions.say("Purchase ${p.description} removed")
+                        } catch (e: PurchaseNotFoundException) {
+                            reactions.say("Purchase with position ${e.position} not found")
+                        }
                     }
                 }
             }
@@ -243,20 +270,22 @@ class DutchTreatScenario(
                     regex("Add (?<consumer>.+) as a consumer to the last purchase(?<position>\\-?1?)")
                 }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val consumerName = getValFromRegex("consumer")
-                    val positinString = getSafeValFromRegex("position")
-                    val position = (if (positinString.isNullOrEmpty()) "-1" else positinString).toInt()
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val consumerName = getValFromRegex("consumer")
+                        val positinString = getSafeValFromRegex("position")
+                        val position = (if (positinString.isNullOrEmpty()) "-1" else positinString).toInt()
 
-                    try {
-                        val p = eventService.addConsumerToPurchase(e, consumerName, position)
-                        reactions.say("Great, I've added $consumerName as a consumer for ${p.description}")
-                    } catch (e: ParticipantNotFoundException) {
-                        reactions.say("There is no participant with name ${e.name}, add him or her before")
-                    } catch (e: NoPurchasesException) {
-                        reactions.say("There are no purchases yet, add a new one")
-                    } catch (e: PurchaseNotFoundException) {
-                        reactions.say("Purchase with position ${e.position} not found")
+                        try {
+                            val p = eventService.addConsumerToPurchase(e, consumerName, position)
+                            reactions.say("Great, I've added $consumerName as a consumer for ${p.description}")
+                        } catch (e: ParticipantNotFoundException) {
+                            reactions.say("There is no participant with name ${e.name}, add him or her before")
+                        } catch (e: NoPurchasesException) {
+                            reactions.say("There are no purchases yet, add a new one")
+                        } catch (e: PurchaseNotFoundException) {
+                            reactions.say("Purchase with position ${e.position} not found")
+                        }
                     }
                 }
             }
@@ -264,23 +293,25 @@ class DutchTreatScenario(
             state("get purchases") {
                 globalActivators { regex("Get purchases") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val purchases = eventService.getPurchases(e)
-                    if (purchases.isEmpty()) {
-                        reactions.say("There are no purchases yet, add a new one")
-                    } else {
-                        reactions.say("Purchases list:\n" + purchases.mapIndexed { index, purchase ->
-                            val consumers = if (purchase.consumers.isEmpty()) "" else {
-                                " for " + purchase.consumers.reduceIndexed { consumerIdx, acc, s ->
-                                    acc + if (consumerIdx < purchase.consumers.size - 1) {
-                                        ", "
-                                    } else {
-                                        " and "
-                                    } + s
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val purchases = eventService.getPurchases(e)
+                        if (purchases.isEmpty()) {
+                            reactions.say("There are no purchases yet, add a new one")
+                        } else {
+                            reactions.say("Purchases list:\n" + purchases.mapIndexed { index, purchase ->
+                                val consumers = if (purchase.consumers.isEmpty()) "" else {
+                                    " for " + purchase.consumers.reduceIndexed { consumerIdx, acc, s ->
+                                        acc + if (consumerIdx < purchase.consumers.size - 1) {
+                                            ", "
+                                        } else {
+                                            " and "
+                                        } + s
+                                    }
                                 }
-                            }
-                            "${index + 1}. ${purchase.buyerName} bought ${purchase.description} for ${purchase.amount.toPrettyString()}" + consumers
-                        }.joinToString("\n"))
+                                "${index + 1}. ${purchase.buyerName} bought ${purchase.description} for ${purchase.amount.toPrettyString()}" + consumers
+                            }.joinToString("\n"))
+                        }
                     }
                 }
             }
@@ -288,16 +319,18 @@ class DutchTreatScenario(
             state("add transfer") {
                 globalActivators { regex("(?<sender>.+) gave (?<receiver>.+) (?<cost>[\\d\\.]+).*") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val senderName = getValFromRegex("sender")
-                    val receiverName = getValFromRegex("receiver")
-                    val cost = toBigDecimal(getValFromRegex("cost")) ?: return@action
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val senderName = getValFromRegex("sender")
+                        val receiverName = getValFromRegex("receiver")
+                        val cost = toBigDecimal(getValFromRegex("cost")) ?: return@wrapSentry
 
-                    try {
-                        val t = eventService.addTransfer(e, senderName, receiverName, cost)
-                        reactions.say("Great, sent ${t.amount.toPrettyString()} from ${t.senderName} to ${t.receiverName}")
-                    } catch (e: ParticipantNotFoundException) {
-                        reactions.say("There is no participant with name ${e.name}, add him or her before")
+                        try {
+                            val t = eventService.addTransfer(e, senderName, receiverName, cost)
+                            reactions.say("Great, sent ${t.amount.toPrettyString()} from ${t.senderName} to ${t.receiverName}")
+                        } catch (e: ParticipantNotFoundException) {
+                            reactions.say("There is no participant with name ${e.name}, add him or her before")
+                        }
                     }
                 }
             }
@@ -305,13 +338,15 @@ class DutchTreatScenario(
             state("remove transfer") {
                 globalActivators { regex("Remove transfer (?<position>[\\d]+).*") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val position = getValFromRegex("position").toInt()
-                    try {
-                        val t = eventService.removeTransfer(e, position)
-                        reactions.say("Transfer '${t.toPrettyString()}' removed")
-                    } catch (e: TransferNotFoundException) {
-                        reactions.say("Transfer with position ${e.position} not found")
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val position = getValFromRegex("position").toInt()
+                        try {
+                            val t = eventService.removeTransfer(e, position)
+                            reactions.say("Transfer '${t.toPrettyString()}' removed")
+                        } catch (e: TransferNotFoundException) {
+                            reactions.say("Transfer with position ${e.position} not found")
+                        }
                     }
                 }
             }
@@ -319,14 +354,16 @@ class DutchTreatScenario(
             state("get transfers") {
                 globalActivators { regex("Get transfers") }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val transfers = eventService.getTransfers(e)
-                    if (transfers.isEmpty()) {
-                        reactions.say("There are no transfers yet, add a new one")
-                    } else {
-                        reactions.say("Transfers list:\n" + transfers.mapIndexed { index, transfer ->
-                            "${index + 1}. ${transfer.toPrettyString()}"
-                        }.joinToString("\n"))
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val transfers = eventService.getTransfers(e)
+                        if (transfers.isEmpty()) {
+                            reactions.say("There are no transfers yet, add a new one")
+                        } else {
+                            reactions.say("Transfers list:\n" + transfers.mapIndexed { index, transfer ->
+                                "${index + 1}. ${transfer.toPrettyString()}"
+                            }.joinToString("\n"))
+                        }
                     }
                 }
             }
@@ -337,16 +374,18 @@ class DutchTreatScenario(
                     intent("Get balance")
                 }
                 action {
-                    val e = getUserEvent() ?: return@action
-                    val balance = balanceService.calculateBalance(e)
-                    reactions.say("Current balance\n" + balance.joinToString("\n") {
-                        when (it.balance.compareTo(BigDecimal.ZERO)) {
-                            -1 -> "${it.participantName} should give ${it.balance.abs().toPrettyString()}"
-                            0 -> "${it.participantName} owes nobody and nobody owes him or her"
-                            1 -> "${it.participantName} should get ${it.balance.toPrettyString()}"
-                            else -> throw IllegalStateException(it.balance.toPrettyString())
-                        }
-                    })
+                    wrapSentry {
+                        val e = getUserEvent() ?: return@wrapSentry
+                        val balance = balanceService.calculateBalance(e)
+                        reactions.say("Current balance\n" + balance.joinToString("\n") {
+                            when (it.balance.compareTo(BigDecimal.ZERO)) {
+                                -1 -> "${it.participantName} should give ${it.balance.abs().toPrettyString()}"
+                                0 -> "${it.participantName} owes nobody and nobody owes him or her"
+                                1 -> "${it.participantName} should get ${it.balance.toPrettyString()}"
+                                else -> throw IllegalStateException(it.balance.toPrettyString())
+                            }
+                        })
+                    }
                 }
             }
 
@@ -384,5 +423,13 @@ class DutchTreatScenario(
 
     private fun EventService.TransferDto.toPrettyString(): String {
         return "${this.senderName} gave ${this.receiverName} ${this.amount.toPrettyString()}"
+    }
+
+    private fun wrapSentry(block: () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            Sentry.captureException(e, "Catch in scenario")
+        }
     }
 }

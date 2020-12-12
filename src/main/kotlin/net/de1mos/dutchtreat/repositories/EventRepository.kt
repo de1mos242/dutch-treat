@@ -11,16 +11,16 @@ import org.litote.kmongo.save
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-data class Participant(val id: String, val name: String)
+data class Participant(@BsonId val id: String, val name: String)
 data class Purchase(
-    val id: String,
+    @BsonId val id: String,
     val buyerId: String,
     val description: String,
     val amount: BigDecimal,
     val consumerIds: List<String>? = null
 )
 
-data class Transfer(val id: String, val senderId: String, val receiverId: String, val amount: BigDecimal)
+data class Transfer(@BsonId val id: String, val senderId: String, val receiverId: String, val amount: BigDecimal)
 
 data class Event(
     @BsonId val id: String,
