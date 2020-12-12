@@ -29,7 +29,9 @@ class DutchTreatScenarioTest : KoinTest {
         @JvmStatic
         internal fun allInit() {
             startKoin {
-                fileProperties("/koin-local.properties")
+                if (DutchTreatScenarioTest::class.java.getResource("/koin-local.properties") != null) {
+                    fileProperties("/koin-local.properties")
+                }
                 environmentProperties()
                 modules(appModule)
             }
