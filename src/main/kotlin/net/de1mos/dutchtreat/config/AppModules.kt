@@ -7,7 +7,14 @@ import io.ktor.util.*
 import net.de1mos.dutchtreat.TelegramRouter
 import net.de1mos.dutchtreat.channels.TelegramChannelCustomImpl
 import net.de1mos.dutchtreat.endpoints.TelegramHandler
+import net.de1mos.dutchtreat.jaicf.BalanceStatesCollection
 import net.de1mos.dutchtreat.jaicf.DutchTreatScenario
+import net.de1mos.dutchtreat.jaicf.EventStatesCollection
+import net.de1mos.dutchtreat.jaicf.InvitationStatesCollection
+import net.de1mos.dutchtreat.jaicf.ParticipantStatesCollection
+import net.de1mos.dutchtreat.jaicf.PurchaseStatesCollection
+import net.de1mos.dutchtreat.jaicf.SystemStatesCollection
+import net.de1mos.dutchtreat.jaicf.TransferStatesCollection
 import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.EventRepositoryImpl
 import net.de1mos.dutchtreat.repositories.InvitationRepository
@@ -26,7 +33,7 @@ val appModule = module {
     single { TelegramRouter(get()) }
     single { TelegramHandler(get()) }
     single { TelegramChannelCustomImpl(get(), getProperty("telegram_token")) }
-    single { DutchTreatScenario(get(), get(), get(), get(), get()) }
+    single { DutchTreatScenario(get(), get(), get(), get(), get(), get(), get()) }
     single<BotApi> {
         BotEngine(
             get(DutchTreatScenario::class).getBot().model,
@@ -46,7 +53,7 @@ val appModule = module {
         )
     }
     single { SentryConfig(getProperty("sentry_dsn"), getProperty("sentry_environment")) }
-    single { AppInfoConfig(getProperty("app_version"))}
+    single { AppInfoConfig(getProperty("app_version")) }
 
     single { EventService(get()) }
     single<EventRepository> { EventRepositoryImpl(get()) }
@@ -61,4 +68,12 @@ val appModule = module {
 
     single { KMongo.createClient(getProperty("mongodb_url")).getDatabase(getProperty("mongodb_database")) }
     single { CIO.create() }
+
+    single { SystemStatesCollection(get(), get()) }
+    single { EventStatesCollection(get(), get()) }
+    single { InvitationStatesCollection(get(), get()) }
+    single { ParticipantStatesCollection(get(), get()) }
+    single { PurchaseStatesCollection(get(), get()) }
+    single { TransferStatesCollection(get(), get()) }
+    single { BalanceStatesCollection(get(), get()) }
 }
