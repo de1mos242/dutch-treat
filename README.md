@@ -3,8 +3,12 @@ Dutch treat app
 
 # What's new:
 
+## 0.0.8
+1. Add sentry configs
+2. Refactoring [#9](https://github.com/de1mos242/dutch-treat/issues/9)
+
 ## 0.0.7
-1. Moved to ktor + koin (#15)
+1. Moved to ktor + koin [#15](https://github.com/de1mos242/dutch-treat/issues/15)
 
 ## 0.0.6-SNAPSHOT
 1. Moved to Google Cloud Run
