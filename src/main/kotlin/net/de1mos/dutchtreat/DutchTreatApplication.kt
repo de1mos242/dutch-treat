@@ -13,6 +13,7 @@ import net.de1mos.dutchtreat.config.AppInfoConfig
 import net.de1mos.dutchtreat.config.ChannelsConfig
 import net.de1mos.dutchtreat.config.SentryConfig
 import net.de1mos.dutchtreat.config.appModule
+import net.de1mos.dutchtreat.migrations.MigrationsRunner
 import org.koin.core.component.KoinApiExtension
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -24,6 +25,7 @@ class DutchTreatApplication : KoinComponent {
     private val channelsConfig by inject<ChannelsConfig>()
     private val sentryConfig by inject<SentryConfig>()
     private val appInfoConfig by inject<AppInfoConfig>()
+    private val migrationsRunner by inject<MigrationsRunner>()
 
     fun runServer() {
         Sentry.init {
@@ -33,6 +35,8 @@ class DutchTreatApplication : KoinComponent {
             it.release = appInfoConfig.version
         }
         try {
+            migrationsRunner.runMigrations()
+
             runBlocking {
                 channelsConfig.registerWebhook()
             }

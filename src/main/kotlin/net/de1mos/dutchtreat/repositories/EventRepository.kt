@@ -7,6 +7,8 @@ import org.litote.kmongo.ascending
 import org.litote.kmongo.eq
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
+import org.litote.kmongo.pullByFilter
+import org.litote.kmongo.push
 import org.litote.kmongo.save
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -26,15 +28,20 @@ data class Event(
     @BsonId val id: String,
     val name: String,
     val creationTimestamp: LocalDateTime,
-    val participants: List<Participant>? = null,
-    val purchases: List<Purchase>? = null,
-    val transfers: List<Transfer>? = null
+    val participants: List<Participant>? = mutableListOf(),
+    val purchases: List<Purchase>? = mutableListOf(),
+    val transfers: List<Transfer>? = mutableListOf()
 )
 
 interface EventRepository {
     fun findAllByIdOrderByCreationTimestampAsc(ids: Iterable<String>): List<Event>
     fun findByIdOrNull(id: String): Event?
     fun save(event: Event)
+    fun addParticipant(event: Event, participant: Participant)
+    fun addPurchase(event: Event, purchase: Purchase)
+    fun removePurchase(event: Event, purchase: Purchase)
+    fun addTransfer(event: Event, transfer: Transfer)
+    fun removeTransfer(event: Event, transfer: Transfer)
 }
 
 class EventRepositoryImpl(mongo: MongoDatabase) : EventRepository {
@@ -50,5 +57,25 @@ class EventRepositoryImpl(mongo: MongoDatabase) : EventRepository {
 
     override fun save(event: Event) {
         col.save(event)
+    }
+
+    override fun addParticipant(event: Event, participant: Participant) {
+        col.updateOne(Event::id eq event.id, push(Event::participants, participant))
+    }
+
+    override fun addPurchase(event: Event, purchase: Purchase) {
+        col.updateOne(Event::id eq event.id, push(Event::purchases, purchase))
+    }
+
+    override fun removePurchase(event: Event, purchase: Purchase) {
+        col.updateOne(Event::id eq event.id, pullByFilter(Event::purchases, Purchase::id eq purchase.id))
+    }
+
+    override fun addTransfer(event: Event, transfer: Transfer) {
+        col.updateOne(Event::id eq event.id, push(Event::transfers, transfer))
+    }
+
+    override fun removeTransfer(event: Event, transfer: Transfer) {
+        col.updateOne(Event::id eq event.id, pullByFilter(Event::transfers, Transfer::id eq transfer.id))
     }
 }

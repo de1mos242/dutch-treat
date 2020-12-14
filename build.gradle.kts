@@ -60,6 +60,9 @@ dependencies {
 
 	implementation("org.litote.kmongo:kmongo:4.2.3")
 
+	implementation("com.github.cloudyrock.mongock:mongock-standalone:4.1.19")
+	implementation("com.github.cloudyrock.mongock:mongodb-sync-v4-driver:4.1.19")
+
 	implementation("io.sentry:sentry:3.2.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")

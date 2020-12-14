@@ -16,7 +16,13 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class EventService(val eventRepository: EventRepository) {
-    data class PurchaseDto(val buyerName: String, val amount: BigDecimal, val description: String, val consumers: List<String>)
+    data class PurchaseDto(
+        val buyerName: String,
+        val amount: BigDecimal,
+        val description: String,
+        val consumers: List<String>
+    )
+
     data class TransferDto(val senderName: String, val receiverName: String, val amount: BigDecimal)
 
     fun createEvent(eventName: String): Event {
@@ -29,17 +35,15 @@ class EventService(val eventRepository: EventRepository) {
         if (getParticipant(event, participantName) != null) {
             return
         }
-        val newParticipants = event.participants?.toMutableList() ?: ArrayList()
-        newParticipants.add(Participant(UUID.randomUUID().toString(), participantName))
-        val newEvent = event.copy(participants = newParticipants)
-        eventRepository.save(newEvent)
+        val participant = Participant(UUID.randomUUID().toString(), participantName)
+        eventRepository.addParticipant(event, participant)
     }
 
     fun getParticipants(event: Event): List<String> {
         return event.participants?.map { it.name } ?: emptyList()
     }
 
-    fun getParticipant(event: Event, participantName: String): Participant? {
+    private fun getParticipant(event: Event, participantName: String): Participant? {
         if (event.participants == null) {
             return null
         }
@@ -49,16 +53,13 @@ class EventService(val eventRepository: EventRepository) {
     fun addPurchase(event: Event, buyerName: String, description: String, amount: BigDecimal): PurchaseDto {
         val p = getParticipant(event, buyerName) ?: throw ParticipantNotFoundException(buyerName)
         val purchase = Purchase(UUID.randomUUID().toString(), p.id, description, amount)
-        val newPurchases = event.purchases?.toMutableList() ?: ArrayList()
-        newPurchases.add(purchase)
-        eventRepository.save(event.copy(purchases = newPurchases))
+        eventRepository.addPurchase(event, purchase)
         return PurchaseDto(buyerName, amount, description, emptyList())
     }
 
     fun removePurchase(event: Event, purchaseNumber: Int): PurchaseDto {
         val purchase = findPurchase(event, purchaseNumber - 1)
-        val newPurchases = event.purchases!!.filter { it.id != purchase.id }
-        eventRepository.save(event.copy(purchases = newPurchases))
+        eventRepository.removePurchase(event, purchase)
         return toDto(event, purchase, event.participants)
     }
 
@@ -100,26 +101,23 @@ class EventService(val eventRepository: EventRepository) {
 
     private fun toDto(event: Event, it: Purchase, participants: List<Participant>?): PurchaseDto {
         return PurchaseDto(
-                event.participants?.find { p -> p.id == it.buyerId }!!.name,
-                it.amount,
-                it.description,
-                it.consumerIds?.map { c -> participants?.find { p -> p.id == c }!!.name } ?: emptyList())
+            event.participants?.find { p -> p.id == it.buyerId }!!.name,
+            it.amount,
+            it.description,
+            it.consumerIds?.map { c -> participants?.find { p -> p.id == c }!!.name } ?: emptyList())
     }
 
     fun addTransfer(event: Event, senderName: String, receiverName: String, amount: BigDecimal): TransferDto {
         val sender = getParticipant(event, senderName) ?: throw ParticipantNotFoundException(senderName)
         val receiver = getParticipant(event, receiverName) ?: throw ParticipantNotFoundException(receiverName)
-        val newTransfers = event.transfers?.toMutableList() ?: ArrayList()
         val transfer = Transfer(UUID.randomUUID().toString(), sender.id, receiver.id, amount)
-        newTransfers.add(transfer)
-        eventRepository.save(event.copy(transfers = newTransfers))
+        eventRepository.addTransfer(event, transfer)
         return TransferDto(sender.name, receiver.name, amount)
     }
 
     fun removeTransfer(event: Event, positionNumber: Int): TransferDto {
         val transfer = findTransfer(event, positionNumber - 1)
-        val newTransfers = event.transfers!!.filter { it.id != transfer.id }
-        eventRepository.save(event.copy(transfers = newTransfers))
+        eventRepository.removeTransfer(event, transfer)
         return transferDto(event, transfer)
     }
 
@@ -129,9 +127,9 @@ class EventService(val eventRepository: EventRepository) {
 
     private fun transferDto(event: Event, it: Transfer): TransferDto {
         return TransferDto(
-                event.participants?.find { participant -> participant.id == it.senderId }!!.name,
-                event.participants.find { participant -> participant.id == it.receiverId }!!.name,
-                it.amount
+            event.participants?.find { participant -> participant.id == it.senderId }!!.name,
+            event.participants.find { participant -> participant.id == it.receiverId }!!.name,
+            it.amount
         )
     }
 

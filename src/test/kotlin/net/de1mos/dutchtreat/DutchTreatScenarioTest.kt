@@ -4,15 +4,18 @@ import com.justai.jaicf.BotEngine
 import com.justai.jaicf.context.manager.InMemoryBotContextManager
 import com.justai.jaicf.reactions.text
 import com.justai.jaicf.test.BotTest
+import io.ktor.util.*
 import net.de1mos.dutchtreat.config.ActivatorsConfig
 import net.de1mos.dutchtreat.config.AppInfoConfig
 import net.de1mos.dutchtreat.config.appModule
 import net.de1mos.dutchtreat.jaicf.DutchTreatScenario
+import net.de1mos.dutchtreat.migrations.MigrationsRunner
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.core.context.startKoin
+import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.util.*
@@ -22,9 +25,11 @@ class DutchTreatScenarioTest : KoinTest {
     private val scenario: DutchTreatScenario by inject()
     private val activatorsConfig: ActivatorsConfig by inject()
     private val appInfoConfig: AppInfoConfig by inject()
+
     lateinit var helper: BotTest
 
     companion object {
+        @KtorExperimentalAPI
         @BeforeAll
         @JvmStatic
         internal fun allInit() {
@@ -34,6 +39,9 @@ class DutchTreatScenarioTest : KoinTest {
                 }
                 environmentProperties()
                 modules(appModule)
+
+                val migrationsRunner by inject(MigrationsRunner::class.java)
+                migrationsRunner.runMigrations()
             }
         }
     }

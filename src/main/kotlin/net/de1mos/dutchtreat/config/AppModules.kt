@@ -2,6 +2,7 @@ package net.de1mos.dutchtreat.config
 
 import com.justai.jaicf.BotEngine
 import com.justai.jaicf.api.BotApi
+import com.mongodb.client.MongoClient
 import io.ktor.client.engine.cio.*
 import io.ktor.util.*
 import net.de1mos.dutchtreat.TelegramRouter
@@ -15,6 +16,7 @@ import net.de1mos.dutchtreat.jaicf.ParticipantStatesCollection
 import net.de1mos.dutchtreat.jaicf.PurchaseStatesCollection
 import net.de1mos.dutchtreat.jaicf.SystemStatesCollection
 import net.de1mos.dutchtreat.jaicf.TransferStatesCollection
+import net.de1mos.dutchtreat.migrations.MigrationsRunner
 import net.de1mos.dutchtreat.repositories.EventRepository
 import net.de1mos.dutchtreat.repositories.EventRepositoryImpl
 import net.de1mos.dutchtreat.repositories.InvitationRepository
@@ -66,8 +68,11 @@ val appModule = module {
 
     single { BalanceService() }
 
-    single { KMongo.createClient(getProperty("mongodb_url")).getDatabase(getProperty("mongodb_database")) }
+    single { DatabaseProperties(getProperty("mongodb_url"), getProperty("mongodb_database")) }
+    single { KMongo.createClient(get(DatabaseProperties::class).connectionString) }
+    single { get(MongoClient::class).getDatabase(get(DatabaseProperties::class).dbName) }
     single { CIO.create() }
+    single { MigrationsRunner(get(), get()) }
 
     single { SystemStatesCollection(get(), get()) }
     single { EventStatesCollection(get(), get()) }
