@@ -10,7 +10,7 @@ class MigrationsRunner(private val mongoClient: MongoClient, private val databas
     fun runMigrations() {
         val runner = MongockStandalone.builder()
             .setDriver(MongoSync4Driver.withDefaultLock(mongoClient, databaseProperties.dbName))
-            .addChangeLogsScanPackage(MigrationsRunner::class.java.packageName)
+            .addChangeLogsScanPackage("net.de1mos.dutchtreat.migrations")
             .buildRunner()
         runner.execute()
     }
