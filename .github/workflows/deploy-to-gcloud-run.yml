@@ -73,7 +73,7 @@ jobs:
         run: docker push gcr.io/dutchtreaten-ixex/dutch-treat
       
       - name: Deploy to GCP
-        run: gcloud run deploy dutch-treat --image gcr.io/dutchtreaten-ixex/dutch-treat --platform managed --region=asia-northeast1
+        run: gcloud run deploy dutch-treat --image gcr.io/dutchtreaten-ixex/dutch-treat-app --platform managed --region=europe-west1
       
 #       - name: push image to heroku registry
 #         run: docker tag de1m0s/dutch-treat:${{ github.run_number }} registry.heroku.com/dutch-treat/web && docker push registry.heroku.com/dutch-treat/web
