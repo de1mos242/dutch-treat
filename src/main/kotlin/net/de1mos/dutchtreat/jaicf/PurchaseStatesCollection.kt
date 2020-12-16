@@ -17,11 +17,11 @@ class PurchaseStatesCollection(
         scenario.state("add purchase") {
             globalActivators { regex("(?<buyer>.+) bought (?<desc>.+) for (?<cost>[\\d\\.]+).*") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val participantName = getValFromRegex("buyer")
                     val description = getValFromRegex("desc")
-                    val cost = toBigDecimal(getValFromRegex("cost")) ?: return@wrapSentry
+                    val cost = toBigDecimal(getValFromRegex("cost")) ?: return@wrapAction
 
                     try {
                         val p = eventService.addPurchase(e, participantName, description, cost)
@@ -38,8 +38,8 @@ class PurchaseStatesCollection(
         scenario.state("remove purchase") {
             globalActivators { regex("Remove purchase (?<position>[\\d]+).*") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val position = getValFromRegex("position").toInt()
                     try {
                         val p = eventService.removePurchase(e, position)
@@ -59,8 +59,8 @@ class PurchaseStatesCollection(
                 regex("Add (?<consumer>.+) as a consumer to the last purchase(?<position>\\-?1?)")
             }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val consumerName = getValFromRegex("consumer")
                     val positinString = getSafeValFromRegex("position")
                     val position = (if (positinString.isNullOrEmpty()) "-1" else positinString).toInt()
@@ -85,8 +85,8 @@ class PurchaseStatesCollection(
         {
             globalActivators { regex("Get purchases") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val purchases = eventService.getPurchases(e)
                     if (purchases.isEmpty()) {
                         reactions.say("There are no purchases yet, add a new one")

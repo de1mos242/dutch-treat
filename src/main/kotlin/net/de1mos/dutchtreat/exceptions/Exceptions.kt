@@ -7,5 +7,6 @@ class NoPurchasesException : RuntimeException()
 class EventNotFoundException(val eventName: String) : RuntimeException()
 class InvitationCodeNotFoundException : RuntimeException()
 
-class SetWebhookFailedException(val responseCode: Int, val responseText: String?): RuntimeException()
+class SetWebhookFailedException(val responseCode: Int, val responseText: String?) : RuntimeException()
 
+class UserPreferencesNotFound(val userId: String) : RuntimeException()

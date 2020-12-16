@@ -16,8 +16,8 @@ class InvitationStatesCollection(
         scenario.state("invite user") {
             globalActivators { regex("invite user") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val code = invitationService.invite(e)
                     reactions.say("Send this code to user: $code")
                 }
@@ -29,7 +29,7 @@ class InvitationStatesCollection(
         scenario.state("activate invitation code") {
             globalActivators { regex("activate (?<val>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}).*") }
             action {
-                wrapSentry {
+                wrapAction(this) {
                     val code = getValFromRegex()
                     try {
                         val event = invitationService.applyInvitation(context.clientId, code)

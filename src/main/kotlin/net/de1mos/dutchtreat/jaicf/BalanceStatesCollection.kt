@@ -18,8 +18,8 @@ class BalanceStatesCollection(
                 intent("Get balance")
             }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val balance = balanceService.calculateBalance(e)
                     reactions.say("Current balance\n" + balance.joinToString("\n") {
                         when (it.balance.compareTo(BigDecimal.ZERO)) {

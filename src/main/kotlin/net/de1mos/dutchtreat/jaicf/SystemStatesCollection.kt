@@ -20,7 +20,7 @@ class SystemStatesCollection(private val appInfoConfig: AppInfoConfig, userPrefe
                 regex("/start")
             }
             action {
-                wrapSentry {
+                wrapAction(this) {
                     reactions.say(
                         """
                                 Hello, this is a Dutch Treat bot!
@@ -37,7 +37,7 @@ class SystemStatesCollection(private val appInfoConfig: AppInfoConfig, userPrefe
     fun version(scenario: Scenario) {
         scenario.state("version") {
             globalActivators { regex("version") }
-            action { wrapSentry { reactions.say(appInfoConfig.version) } }
+            action { wrapAction(this) { reactions.say(appInfoConfig.version) } }
         }
     }
 
@@ -48,7 +48,7 @@ class SystemStatesCollection(private val appInfoConfig: AppInfoConfig, userPrefe
                 intent("help")
             }
             action {
-                wrapSentry {
+                wrapAction(this) {
                     reactions.say(
                         """
                         You can send me these common commands:
@@ -72,7 +72,7 @@ class SystemStatesCollection(private val appInfoConfig: AppInfoConfig, userPrefe
                 intent("full help")
             }
             action {
-                wrapSentry {
+                wrapAction(this) {
                     reactions.say(
                         """
                         You can send me these commands:

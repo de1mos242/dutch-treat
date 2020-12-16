@@ -14,7 +14,7 @@ class EventStatesCollection(
         scenario.state("create event") {
             globalActivators { regex("start event (?<val>.+)") }
             action {
-                wrapSentry {
+                wrapAction(this) {
                     val eventName = getValFromRegex()
                     val e = eventService.createEvent(eventName)
                     userPreferencesService.updateUserCurrentEvent(context.clientId, e)
@@ -28,8 +28,8 @@ class EventStatesCollection(
         scenario.state("get current event") {
             globalActivators { regex("get current event") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     reactions.say("Current event is: ${e.name}")
                 }
             }
@@ -40,7 +40,7 @@ class EventStatesCollection(
         scenario.state("show events") {
             globalActivators { regex("show events") }
             action {
-                wrapSentry {
+                wrapAction(this) {
                     val events = userPreferencesService.getUserEvents(context.clientId)
                     if (events.isEmpty()) {
                         reactions.say("There are no events yet, try to start a new one")
@@ -57,7 +57,7 @@ class EventStatesCollection(
         scenario.state("switch to event") {
             globalActivators { regex("switch to event (?<event>.+)") }
             action {
-                wrapSentry {
+                wrapAction(this) {
                     val eventName = getValFromRegex("event")
                     try {
                         userPreferencesService.switchEvent(context.clientId, eventName)

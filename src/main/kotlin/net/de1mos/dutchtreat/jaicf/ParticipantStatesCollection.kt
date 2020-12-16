@@ -14,8 +14,8 @@ class ParticipantStatesCollection(
         scenario.state("add participant") {
             globalActivators { regex("add participant (?<val>.+)") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val name = getValFromRegex()
                     eventService.addParticipant(e, name)
                     reactions.say("Great, you added $name to your event")
@@ -28,8 +28,8 @@ class ParticipantStatesCollection(
         scenario.state("get participants") {
             globalActivators { regex("Get participants") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val participants = eventService.getParticipants(e)
                     if (participants.isEmpty()) {
                         reactions.say("There are no participants yet, add someone")

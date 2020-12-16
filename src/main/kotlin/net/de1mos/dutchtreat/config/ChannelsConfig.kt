@@ -5,6 +5,8 @@ import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
+import net.de1mos.dutchtreat.exceptions.SetWebhookFailedException
 
 class ChannelsConfig(
     private val channelProperties: ChannelProperties,
@@ -12,10 +14,14 @@ class ChannelsConfig(
 ) {
     suspend fun registerWebhook() {
         val httpClient = HttpClient(engine)
-        httpClient.post<HttpResponse>("https://api.telegram.org/bot${channelProperties.telegram.token}/setWebhook") {
+        val token = channelProperties.telegram.token
+        val response = httpClient.post<HttpResponse>("https://api.telegram.org/bot$token/setWebhook") {
             body = MultiPartFormDataContent(formData {
                 append("url", channelProperties.telegram.webhook)
             })
+        }
+        if (response.status != HttpStatusCode.OK) {
+            throw SetWebhookFailedException(response.status.value, response.readText())
         }
     }
 }

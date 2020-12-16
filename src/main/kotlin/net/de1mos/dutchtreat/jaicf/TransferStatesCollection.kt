@@ -16,11 +16,11 @@ class TransferStatesCollection(
         scenario.state("add transfer") {
             globalActivators { regex("(?<sender>.+) gave (?<receiver>.+) (?<cost>[\\d\\.]+).*") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val senderName = getValFromRegex("sender")
                     val receiverName = getValFromRegex("receiver")
-                    val cost = toBigDecimal(getValFromRegex("cost")) ?: return@wrapSentry
+                    val cost = toBigDecimal(getValFromRegex("cost")) ?: return@wrapAction
 
                     try {
                         val t = eventService.addTransfer(e, senderName, receiverName, cost)
@@ -37,8 +37,8 @@ class TransferStatesCollection(
         scenario.state("remove transfer") {
             globalActivators { regex("Remove transfer (?<position>[\\d]+).*") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val position = getValFromRegex("position").toInt()
                     try {
                         val t = eventService.removeTransfer(e, position)
@@ -55,8 +55,8 @@ class TransferStatesCollection(
         scenario.state("get transfers") {
             globalActivators { regex("Get transfers") }
             action {
-                wrapSentry {
-                    val e = getUserEvent() ?: return@wrapSentry
+                wrapAction(this) {
+                    val e = getUserEvent() ?: return@wrapAction
                     val transfers = eventService.getTransfers(e)
                     if (transfers.isEmpty()) {
                         reactions.say("There are no transfers yet, add a new one")
